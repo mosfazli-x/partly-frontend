@@ -1,0 +1,10 @@
+<script setup lang="ts">
+const { user, restore, login, message } = useMarketplace()
+useHead({ title: 'ورود و ثبت‌نام | پارتلی' })
+const register = ref(false), busy = ref(false), error = ref('')
+const form = reactive({ name: '', email: '', password: '' })
+const destination = () => user.value?.role === 'ADMIN' ? '/admin' : user.value?.role === 'VENDOR' ? '/vendor' : '/account'
+onMounted(async () => { await restore(); if (user.value) await navigateTo(destination()) })
+async function submit() { busy.value = true; error.value = ''; try { await login(`/api/auth/${register.value ? 'register' : 'login'}`, register.value ? { name: form.name, email: form.email, password: form.password } : { email: form.email, password: form.password }); await navigateTo(destination()) } catch (e) { error.value = message(e) } finally { busy.value = false } }
+</script>
+<template><section class="shell py-16"><form class="market-panel mx-auto max-w-md" @submit.prevent="submit"><p class="market-eyebrow">حساب پارتلی</p><h1 class="market-title">{{ register ? 'ایجاد حساب کاربری' : 'خوش آمدید' }}</h1><p class="mb-6 text-slate-500">برای مدیریت خریدها وارد شوید.</p><div v-if="error" class="market-error" role="alert">{{ error }}</div><label v-if="register" class="market-label">نام و نام خانوادگی<input v-model="form.name" required maxlength="100" autocomplete="name" class="market-input"></label><label class="market-label">ایمیل<input v-model="form.email" type="email" required autocomplete="email" class="market-input" dir="ltr"></label><label class="market-label">رمز عبور<input v-model="form.password" type="password" minlength="10" maxlength="128" required :autocomplete="register ? 'new-password' : 'current-password'" class="market-input" dir="ltr"><span class="text-xs text-slate-500">حداقل ۱۰ نویسه</span></label><button class="market-primary w-full" :disabled="busy">{{ busy ? 'در حال بررسی…' : register ? 'ثبت‌نام' : 'ورود' }}</button><button type="button" class="mt-5 w-full text-sm text-orange" @click="register = !register; error = ''">{{ register ? 'حساب دارید؟ ورود' : 'حساب ندارید؟ ثبت‌نام' }}</button></form></section></template>
