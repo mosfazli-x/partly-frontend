@@ -6,13 +6,17 @@ if (!['admin', 'vendor', 'account'].includes(workspace.value)) throw createError
 const isAdmin = computed(() => workspace.value === 'admin'), isVendor = computed(() => workspace.value === 'vendor')
 const tab = ref('dashboard'), busy = ref(true), saving = ref(false), error = ref(''), notice = ref(''), rows = ref<any[]>([]), dashboard = ref<any>(null), categories = ref<any[]>([]), vehicles = ref<any[]>([]), query = ref(''), editing = ref<string | null>(null), showForm = ref(false)
 const profile = reactive({ name: '', phone: '', address: '', shopName: '' })
-const blank = () => ({ name: '', sku: '', description: '', price: 0, stock: 0, brand: '', categoryId: '', image: '/products/brake-pad.svg', condition: 'NEW', variantIds: [] as string[] })
-const form = reactive(blank()), category = reactive({ name: '', slug: '', description: '', sortOrder: 0 })
+const blank = () => ({ name: '', sku: '', description: '', price: 0, stock: 0, brand: '', categoryId: '', image: '/products/brake-pad.svg', condition: 'NEW', variantIds: [] as string[], images: [] as string[] })
+const form = reactive(blank()), category = reactive({ name: '', slug: '', description: '', sortOrder: 0, parentId: null as string | null })
+const imageUploading = ref(false), imageFileName = ref('')
+const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'], IMAGE_MAX_BYTES = 5 * 1024 * 1024
+let imageVersion = 0
 const tabs = computed(() => isAdmin.value ? [['dashboard','نمای کلی'],['products','بررسی کالاها'],['users','کاربران و فروشندگان'],['orders','سفارش‌ها'],['categories','دسته‌بندی‌ها'],['profile','حساب کاربری']] : isVendor.value ? [['dashboard','نمای کلی'],['products','کالاهای من'],['orders','سفارش‌های فروشگاه'],['profile','اطلاعات فروشگاه']] : [['orders','سفارش‌های من'],['profile','اطلاعات حساب']])
 const labels: Record<string,string> = { ACTIVE:'فعال',PENDING:'در انتظار',SUSPENDED:'تعلیق',REJECTED:'رد شده',PROCESSING:'در حال آماده‌سازی',SHIPPED:'ارسال شده',DELIVERED:'تحویل شده',CANCELLED:'لغو شده',CUSTOMER:'خریدار',VENDOR:'فروشنده',ADMIN:'مدیر',products:'کالاها',orders:'سفارش‌ها',revenue:'فروش تحویل‌شده',lowStock:'موجودی کم',users:'کاربران',vendors:'فروشندگان',pendingProducts:'کالاهای در انتظار' }
 const filtered = computed(() => rows.value.filter(row => JSON.stringify(row).toLowerCase().includes(query.value.toLowerCase())))
 const variants = computed(() => vehicles.value.flatMap(make => make.models.flatMap((model: any) => model.variants.map((v: any) => ({ id: v.id, name: `${make.name} / ${model.name} / ${v.name}` })))))
 const allCategories = computed(() => { const map = new Map<string,any>(); for (const c of categories.value) { map.set(c.id,c); for (const child of c.children || []) map.set(child.id,child) } return [...map.values()] })
+const parentOptions = computed(() => allCategories.value.filter(c => c.id !== editing.value || tab.value !== 'categories'))
 const prefix = computed(() => `/api/${workspace.value}`)
 const allowed = computed(() => user.value && (workspace.value === 'account' || user.value.role === workspace.value.toUpperCase()))
 let loadVersion = 0
@@ -36,14 +40,47 @@ onBeforeUnmount(() => { loadVersion++ })
 async function select(value:string) { tab.value = value; query.value=''; showForm.value=false; notice.value=''; await load() }
 onMounted(async () => { await restore(); if (!user.value) { await navigateTo('/login'); return } Object.assign(profile, {name:user.value.name,phone:user.value.phone||'',address:user.value.address||'',shopName:user.value.shopName||''}); if (!isAdmin.value && !isVendor.value) tab.value='orders'; if (!allowed.value || (isVendor.value && user.value.status !== 'ACTIVE')) {busy.value=false;return} try { [categories.value,vehicles.value] = await Promise.all([api('/api/categories'),api('/api/vehicles')]) } catch(e) {error.value=message(e)} await load() })
 async function mutate(path:string,body:any,method='PATCH') { saving.value=true;error.value='';notice.value=''; try { await api(path,{method,body}); notice.value='تغییرات با موفقیت ذخیره شد.'; await load(); return true } catch(e) {error.value=message(e);return false} finally {saving.value=false} }
-function editProduct(product?:any) {editing.value=product?.id||null;Object.assign(form,blank(),product ? {name:product.name,sku:product.sku,description:product.description,price:Number(product.price),stock:product.stock,brand:product.brand,categoryId:product.categoryId,image:product.image,condition:product.condition,variantIds:product.fitments?.map((f:any)=>f.variantId)||[]} : {});productSnapshot=JSON.stringify(form);showForm.value=true}
+function editProduct(product?:any) {imageVersion++;imageUploading.value=false;imageFileName.value='';editing.value=product?.id||null;Object.assign(form,blank(),product ? {name:product.name,sku:product.sku,description:product.description,price:Number(product.price),stock:product.stock,brand:product.brand,categoryId:product.categoryId,image:product.image,condition:product.condition,variantIds:product.fitments?.map((f:any)=>f.variantId)||[],images:(product.images??[]).filter((im:any)=>im.url!==product.image).map((im:any)=>im.url)} : {});productSnapshot=JSON.stringify(form);showForm.value=true}
 async function saveProduct() {
+  if (imageUploading.value) return
+  // Admin registration uses the dedicated store-owned endpoint; vendor create/edit is untouched.
+  const adminCreate = isAdmin.value && !editing.value
   const original = productSnapshot ? JSON.parse(productSnapshot) : {}
-  const body = editing.value
+  const body = editing.value && !adminCreate
     ? Object.fromEntries(Object.entries(form).filter(([key,value]) => JSON.stringify(value) !== JSON.stringify(original[key])))
     : {...form}
-  if (!Object.keys(body).length) { notice.value='تغییری برای ذخیره وجود ندارد.'; showForm.value=false; return }
-  if(await mutate(`${prefix.value}/products${editing.value ? '/' + editing.value : ''}`,body,editing.value?'PATCH':'POST')) showForm.value=false
+  if (!adminCreate && !Object.keys(body).length) { notice.value='تغییری برای ذخیره وجود ندارد.'; showForm.value=false; return }
+  const path = adminCreate ? '/api/admin/products' : `${prefix.value}/products${editing.value ? '/' + editing.value : ''}`
+  if(await mutate(path,body,editing.value && !adminCreate ? 'PATCH':'POST')) showForm.value=false
+}
+function pickProductImages(event: Event) {
+  const input = event.target as HTMLInputElement | null
+  const files = Array.from(input?.files ?? [])
+  if (input) input.value = ''
+  if (!files.length) return
+  for (const file of files) {
+    if (!IMAGE_TYPES.includes(file.type)) { error.value='فقط تصویر JPEG، PNG یا WebP مجاز است.'; return }
+    if (file.size > IMAGE_MAX_BYTES) { error.value='حجم تصویر نباید بیشتر از ۵ مگابایت باشد.'; return }
+  }
+  if (form.images.length + files.length > 9) { error.value='حداکثر ۹ تصویر فراتر از تصویر اصلی مجاز است.'; return }
+  for (const file of files) uploadProductImage(file)
+}
+async function uploadProductImage(file: File) {
+  const version = ++imageVersion
+  imageUploading.value = true; error.value=''; notice.value=''; imageFileName.value = file.name
+  try {
+    const result = await api<{ image: string }>('/api/admin/product-image', { method:'POST', body:file, headers:{ 'Content-Type': file.type } })
+    if (version !== imageVersion) return
+    // The first uploaded image of a new product becomes the cover; later uploads join the gallery.
+    if (!form.image || form.image === '/products/brake-pad.svg') form.image = result.image
+    if (!form.images.includes(result.image)) form.images.push(result.image)
+    notice.value='تصویر با موفقیت بارگذاری شد.'
+  } catch(e) { if (version === imageVersion) error.value=message(e) }
+  finally { if (version === imageVersion) imageUploading.value = false }
+}
+function removeImage(url: string) {
+  form.images = form.images.filter(u => u !== url)
+  if (form.image === url) form.image = editing.value ? '' : '/products/brake-pad.svg'
 }
 async function saveCategory() {
   if(await mutate(`${prefix.value}/categories${editing.value ? '/' + editing.value : ''}`,{...category},editing.value?'PATCH':'POST')) {
@@ -57,4 +94,232 @@ function nextStatuses(status:string) { return ({PENDING:['PROCESSING','CANCELLED
 const orderStatus = (order:any) => isVendor.value ? order.vendorStatus || order.status : order.status
 useHead({title: isAdmin.value?'مدیریت پارتلی':isVendor.value?'پنل فروشندگان پارتلی':'حساب من | پارتلی'})
 </script>
-<template><section class="shell py-10"><div class="mb-8 flex flex-wrap items-center justify-between gap-4"><div><p class="market-eyebrow">فضای کاری پارتلی</p><h1 class="market-title">{{ isAdmin ? 'مدیریت سایت' : isVendor ? 'داشبورد فروشنده' : 'حساب کاربری' }}</h1><p class="text-sm text-slate-500">{{ user?.shopName || user?.name }}، خوش آمدید.</p></div><button class="market-secondary" @click="logout">خروج از حساب</button></div><div v-if="!allowed && !busy" class="market-error">شما به این بخش دسترسی ندارید. <NuxtLink to="/account">حساب من</NuxtLink></div><div v-else-if="isVendor && user?.status !== 'ACTIVE' && !busy" class="market-panel"><h2 class="text-xl font-bold">فروشگاه در انتظار تأیید</h2><p class="mt-3 text-slate-500">درخواست ثبت فروشگاه دریافت شد. پس از بررسی مدیر، امکان ثبت کالا و مدیریت سفارش‌ها فعال می‌شود.</p></div><div v-else class="grid gap-6 lg:grid-cols-[220px_1fr]"><aside class="market-panel h-fit"><nav class="flex gap-2 overflow-auto lg:flex-col" aria-label="منوی داشبورد"><button v-for="[key,label] in tabs" :key="key" class="market-nav" :class="{'market-nav-active':tab===key}" @click="select(key)">{{ label }}</button></nav><NuxtLink to="/catalog" class="mt-6 block text-sm text-orange">بازگشت به فروشگاه ←</NuxtLink></aside><div class="min-w-0"><div v-if="error" class="market-error" role="alert">{{ error }} <button class="underline" @click="load">تلاش دوباره</button></div><div v-if="notice" class="market-success" role="status">{{ notice }}</div><div v-if="busy" class="market-panel" role="status">در حال دریافت اطلاعات…</div><template v-else-if="tab==='dashboard'"><div class="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3"><div v-for="(value,key) in dashboard?.stats" :key="key" class="market-panel"><p class="text-sm text-slate-500">{{ labels[key] || key }}</p><p class="mt-3 text-2xl font-black">{{ key==='revenue'?money(value):Number(value).toLocaleString('fa-IR') }}</p></div></div><div class="market-panel"><h2 class="mb-5 text-lg font-bold">آخرین سفارش‌ها</h2><p v-if="!dashboard?.recentOrders?.length" class="market-empty">هنوز سفارشی ثبت نشده است.</p><div v-for="order in dashboard?.recentOrders" :key="order.id" class="flex flex-wrap justify-between gap-3 border-b py-4"><span>{{ order.name }} · {{ new Date(order.createdAt).toLocaleDateString('fa-IR') }}</span><span>{{ money(order.total) }}</span><span class="market-badge">{{ labels[orderStatus(order)] }}</span></div><button class="mt-5 text-sm text-orange" @click="select('orders')">مشاهده همه سفارش‌ها ←</button></div></template><form v-else-if="tab==='profile'" class="market-panel max-w-2xl" @submit.prevent="saveProfile"><h2 class="mb-6 text-xl font-bold">اطلاعات حساب</h2><label class="market-label">نام<input v-model="profile.name" required class="market-input"></label><label v-if="isVendor" class="market-label">نام فروشگاه<input v-model="profile.shopName" required class="market-input"></label><label class="market-label">شماره تماس<input v-model="profile.phone" class="market-input" dir="ltr"></label><label class="market-label">نشانی<textarea v-model="profile.address" class="market-input" rows="3" /></label><button class="market-primary" :disabled="saving">ذخیره اطلاعات</button></form><template v-else><div class="market-panel"><div class="mb-6 flex flex-wrap justify-between gap-3"><h2 class="text-xl font-bold">{{ tabs.find(t=>t[0]===tab)?.[1] }}</h2><button v-if="isVendor && tab==='products'" class="market-primary" @click="editProduct()">افزودن کالا</button><button v-if="isAdmin && tab==='categories'" class="market-primary" @click="editing=null;Object.assign(category,{name:'',slug:'',description:'',sortOrder:0});showForm=true">دسته‌بندی جدید</button></div><input v-model="query" placeholder="جستجو در فهرست…" aria-label="جستجو در فهرست" class="market-input mb-5"><p v-if="!filtered.length" class="market-empty">موردی برای نمایش وجود ندارد.</p><div v-if="tab==='products'" class="overflow-x-auto"><table class="market-table"><thead><tr><th>کالا</th><th>قیمت / موجودی</th><th>وضعیت</th><th>عملیات</th></tr></thead><tbody><tr v-for="p in filtered" :key="p.id"><td><strong>{{ p.name }}</strong><p class="text-xs text-slate-500">{{ p.sku }} · {{ p.vendor?.shopName || p.brand }}</p></td><td>{{ money(p.price) }}<p class="text-xs">{{ p.stock }} عدد</p></td><td><span class="market-badge">{{ labels[p.status] }}</span></td><td><button v-if="isVendor" class="market-secondary" @click="editProduct(p)">ویرایش</button><div v-else class="flex gap-2"><button v-for="status in ['ACTIVE','REJECTED','PENDING'].filter(s=>s!==p.status)" :key="status" class="market-secondary" :disabled="saving" @click="mutate(`${prefix}/products/${p.id}`,{status})">{{ labels[status] }}</button></div></td></tr></tbody></table></div><div v-if="tab==='users'" class="overflow-x-auto"><table class="market-table"><thead><tr><th>کاربر</th><th>نقش / وضعیت</th><th>عملیات</th></tr></thead><tbody><tr v-for="u in filtered" :key="u.id"><td>{{ u.name }}<p class="text-xs text-slate-500">{{ u.email }} {{ u.shopName }}</p></td><td>{{ labels[u.role] }} / {{ labels[u.status] }}</td><td><div v-if="u.role!=='ADMIN'" class="flex gap-2"><button v-for="status in ['ACTIVE','SUSPENDED'].filter(s=>s!==u.status)" :key="status" class="market-secondary" :disabled="saving" @click="mutate(`${prefix}/users/${u.id}`,{status})">{{ status==='ACTIVE'?'فعال‌سازی':'تعلیق حساب' }}</button></div></td></tr></tbody></table></div><div v-if="tab==='categories'"><div v-for="c in filtered" :key="c.id" class="flex items-center justify-between border-b py-4"><span>{{ c.name }} <small class="text-slate-400">{{ c.slug }}</small></span><button class="market-secondary" @click="editing=c.id;Object.assign(category,{name:c.name,slug:c.slug,description:c.description||'',sortOrder:c.sortOrder});showForm=true">ویرایش</button></div></div><div v-if="tab==='orders'" class="space-y-5"><article v-for="o in filtered" :key="o.id" class="rounded-xl border p-5"><div class="flex flex-wrap justify-between gap-3"><strong>سفارش {{ o.id.slice(-8).toUpperCase() }}</strong><span class="market-badge">{{ labels[orderStatus(o)] }}</span></div><p class="my-3 text-sm text-slate-500">{{ o.name }} · {{ o.phone }} · {{ new Date(o.createdAt).toLocaleDateString('fa-IR') }}</p><p class="text-sm">{{ o.address }} · کد پستی {{ o.postalCode }}</p><ul class="my-4 space-y-2"><li v-for="item in o.items" :key="item.id" class="flex justify-between gap-4 text-sm"><span>{{ item.name }} × {{ item.quantity }} <small class="text-slate-400">{{ labels[item.status] }}</small></span><span>{{ money(Number(item.price)*item.quantity) }}</span></li></ul><div class="flex flex-wrap justify-between gap-3 border-t pt-4"><strong>{{ money(o.total) }}</strong><span class="text-xs text-slate-500">پرداخت در محل</span></div><div v-if="isAdmin||isVendor" class="mt-4 flex flex-wrap gap-2"><button v-for="status in nextStatuses(orderStatus(o))" :key="status" :disabled="saving" class="market-secondary" @click="mutate(`${prefix}/orders/${o.id}`,{status})">{{ labels[status] }}</button></div></article></div></div></template></div></div><div v-if="showForm" class="market-overlay" @click.self="showForm=false"><form class="market-panel max-h-[90vh] w-full max-w-2xl overflow-auto" @submit.prevent="tab==='categories'?saveCategory():saveProduct()"><div class="mb-6 flex justify-between"><h2 class="text-xl font-bold">{{ editing?'ویرایش':'افزودن' }} {{ tab==='categories'?'دسته‌بندی':'کالا' }}</h2><button type="button" aria-label="بستن" @click="showForm=false">✕</button></div><div v-if="error" class="market-error">{{ error }}</div><template v-if="tab==='categories'"><label class="market-label">نام<input v-model="category.name" required class="market-input"></label><label class="market-label">شناسه URL<input v-model="category.slug" required pattern="[^\s/]+" class="market-input" dir="ltr"></label><label class="market-label">توضیحات<textarea v-model="category.description" class="market-input" /></label><label class="market-label">ترتیب نمایش<input v-model.number="category.sortOrder" type="number" min="0" class="market-input"></label></template><template v-else><div class="grid gap-x-4 sm:grid-cols-2"><label v-for="field in [{key:'name',label:'نام کالا'},{key:'sku',label:'کد کالا'},{key:'brand',label:'برند'},{key:'image',label:'نشانی تصویر'}]" :key="field.key" class="market-label">{{ field.label }}<input v-model="(form as any)[field.key]" required class="market-input"></label><label class="market-label">قیمت (تومان)<input v-model.number="form.price" type="number" min="1" step="1" required class="market-input"></label><label class="market-label">موجودی<input v-model.number="form.stock" type="number" min="0" step="1" required class="market-input"></label><label class="market-label">دسته‌بندی<select v-model="form.categoryId" required class="market-input"><option value="">انتخاب کنید</option><option v-for="c in allCategories" :key="c.id" :value="c.id">{{ c.name }}</option></select></label><label class="market-label">وضعیت کالا<select v-model="form.condition" class="market-input"><option value="NEW">نو</option><option value="REFURBISHED">بازسازی‌شده</option><option value="USED">کارکرده</option></select></label></div><label class="market-label">توضیحات<textarea v-model="form.description" rows="4" class="market-input" /></label><label class="market-label">خودروهای سازگار (انتخاب چندگانه)<select v-model="form.variantIds" multiple class="market-input min-h-32"><option v-for="v in variants" :key="v.id" :value="v.id">{{ v.name }}</option></select></label><p class="mb-5 text-sm text-slate-500">کالا پس از ثبت یا ویرایش برای بررسی مدیر ارسال می‌شود.</p></template><button class="market-primary" :disabled="saving">{{ saving?'در حال ذخیره…':'ذخیره' }}</button></form></div></section></template>
+<template>
+<section class="shell py-10">
+<div class="mb-8 flex flex-wrap items-center justify-between gap-4">
+<div>
+<p class="market-eyebrow">فضای کاری پارتلی</p>
+<h1 class="market-title">{{ isAdmin ? 'مدیریت سایت' : isVendor ? 'داشبورد فروشنده' : 'حساب کاربری' }}</h1>
+<p class="text-sm text-slate-500">{{ user?.shopName || user?.name }}، خوش آمدید.</p>
+</div>
+<button class="market-secondary" @click="logout">خروج از حساب</button>
+</div>
+<div v-if="!allowed && !busy" class="market-error">شما به این بخش دسترسی ندارید. <NuxtLink to="/account">حساب من</NuxtLink>
+</div>
+<div v-else-if="isVendor && user?.status !== 'ACTIVE' && !busy" class="market-panel">
+<h2 class="text-xl font-bold">فروشگاه در انتظار تأیید</h2>
+<p class="mt-3 text-slate-500">درخواست ثبت فروشگاه دریافت شد. پس از بررسی مدیر، امکان ثبت کالا و مدیریت سفارش‌ها فعال می‌شود.</p>
+</div>
+<div v-else class="grid gap-6 lg:grid-cols-[220px_1fr]">
+<aside class="market-panel h-fit">
+<nav class="flex gap-2 overflow-auto lg:flex-col" aria-label="منوی داشبورد">
+<button v-for="[key,label] in tabs" :key="key" class="market-nav" :class="{'market-nav-active':tab===key}" @click="select(key)">{{ label }}</button>
+</nav>
+<NuxtLink to="/catalog" class="mt-6 block text-sm text-orange">بازگشت به فروشگاه ←</NuxtLink>
+</aside>
+<div class="min-w-0">
+<div v-if="error" class="market-error" role="alert">{{ error }} <button class="underline" @click="load">تلاش دوباره</button>
+</div>
+<div v-if="notice" class="market-success" role="status">{{ notice }}</div>
+<div v-if="busy" class="market-panel" role="status">در حال دریافت اطلاعات…</div>
+<template v-else-if="tab==='dashboard'">
+<div class="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+<div v-for="(value,key) in dashboard?.stats" :key="key" class="market-panel">
+<p class="text-sm text-slate-500">{{ labels[key] || key }}</p>
+<p class="mt-3 text-2xl font-black">{{ key==='revenue'?money(value):Number(value).toLocaleString('fa-IR') }}</p>
+</div>
+</div>
+<div class="market-panel">
+<h2 class="mb-5 text-lg font-bold">آخرین سفارش‌ها</h2>
+<p v-if="!dashboard?.recentOrders?.length" class="market-empty">هنوز سفارشی ثبت نشده است.</p>
+<div v-for="order in dashboard?.recentOrders" :key="order.id" class="flex flex-wrap justify-between gap-3 border-b py-4">
+<span>{{ order.name }} · {{ new Date(order.createdAt).toLocaleDateString('fa-IR') }}</span>
+<span>{{ money(order.total) }}</span>
+<span class="market-badge">{{ labels[orderStatus(order)] }}</span>
+</div>
+<button class="mt-5 text-sm text-orange" @click="select('orders')">مشاهده همه سفارش‌ها ←</button>
+</div>
+</template>
+<form v-else-if="tab==='profile'" class="market-panel max-w-2xl" @submit.prevent="saveProfile">
+<h2 class="mb-6 text-xl font-bold">اطلاعات حساب</h2>
+<label class="market-label">نام<input v-model="profile.name" required class="market-input">
+</label>
+<label v-if="isVendor" class="market-label">نام فروشگاه<input v-model="profile.shopName" required class="market-input">
+</label>
+<label class="market-label">شماره تماس<input v-model="profile.phone" class="market-input" dir="ltr">
+</label>
+<label class="market-label">نشانی<textarea v-model="profile.address" class="market-input" rows="3" />
+</label>
+<button class="market-primary" :disabled="saving">ذخیره اطلاعات</button>
+</form>
+<template v-else>
+<div class="market-panel">
+<div class="mb-6 flex flex-wrap justify-between gap-3">
+<h2 class="text-xl font-bold">{{ tabs.find(t=>t[0]===tab)?.[1] }}</h2>
+<button v-if="isVendor && tab==='products'" class="market-primary" @click="editProduct()">افزودن کالا</button>
+<button v-if="isAdmin && tab==='products'" class="market-primary" @click="editProduct()">ثبت کالای فروشگاه</button>
+<button v-if="isAdmin && tab==='categories'" class="market-primary" @click="editing=null;Object.assign(category,{name:'',slug:'',description:'',sortOrder:0,parentId:null});showForm=true">دسته‌بندی جدید</button>
+</div>
+<input v-model="query" placeholder="جستجو در فهرست…" aria-label="جستجو در فهرست" class="market-input mb-5">
+<p v-if="!filtered.length" class="market-empty">موردی برای نمایش وجود ندارد.</p>
+<div v-if="tab==='products'" class="overflow-x-auto">
+<table class="market-table">
+<thead>
+<tr>
+<th>کالا</th>
+<th>قیمت / موجودی</th>
+<th>وضعیت</th>
+<th>عملیات</th>
+</tr>
+</thead>
+<tbody>
+<tr v-for="p in filtered" :key="p.id">
+<td>
+<strong>{{ p.name }}</strong>
+<p class="text-xs text-slate-500">{{ p.sku }} · {{ p.vendor?.shopName || p.brand }}</p>
+</td>
+<td>{{ money(p.price) }}<p class="text-xs">{{ p.stock }} عدد</p>
+</td>
+<td>
+<span class="market-badge">{{ labels[p.status] }}</span>
+</td>
+<td>
+<button v-if="isVendor" class="market-secondary" @click="editProduct(p)">ویرایش</button>
+<div v-else class="flex gap-2">
+<button v-for="status in ['ACTIVE','REJECTED','PENDING'].filter(s=>s!==p.status)" :key="status" class="market-secondary" :disabled="saving" @click="mutate(`${prefix}/products/${p.id}`,{status})">{{ labels[status] }}</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div v-if="tab==='users'" class="overflow-x-auto">
+<table class="market-table">
+<thead>
+<tr>
+<th>کاربر</th>
+<th>نقش / وضعیت</th>
+<th>عملیات</th>
+</tr>
+</thead>
+<tbody>
+<tr v-for="u in filtered" :key="u.id">
+<td>{{ u.name }}<p class="text-xs text-slate-500">{{ u.phone }} {{ u.shopName }}</p>
+</td>
+<td>{{ labels[u.role] }} / {{ labels[u.status] }}</td>
+<td>
+<div v-if="u.role!=='ADMIN'" class="flex gap-2">
+<button v-for="status in ['ACTIVE','SUSPENDED'].filter(s=>s!==u.status)" :key="status" class="market-secondary" :disabled="saving" @click="mutate(`${prefix}/users/${u.id}`,{status})">{{ status==='ACTIVE'?'فعال‌سازی':'تعلیق حساب' }}</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div v-if="tab==='categories'">
+<div v-for="c in filtered" :key="c.id" class="flex items-center justify-between border-b py-4">
+<span>{{ c.name }} <small class="text-slate-400">{{ c.slug }}</small>
+</span>
+<button class="market-secondary" @click="editing=c.id;Object.assign(category,{name:c.name,slug:c.slug,description:c.description||'',sortOrder:c.sortOrder,parentId:c.parentId??null});showForm=true">ویرایش</button>
+</div>
+</div>
+<div v-if="tab==='orders'" class="space-y-5">
+<article v-for="o in filtered" :key="o.id" class="rounded-xl border p-5">
+<div class="flex flex-wrap justify-between gap-3">
+<strong>سفارش {{ o.id.slice(-8).toUpperCase() }}</strong>
+<span class="market-badge">{{ labels[orderStatus(o)] }}</span>
+</div>
+<p class="my-3 text-sm text-slate-500">{{ o.name }} · {{ o.phone }} · {{ new Date(o.createdAt).toLocaleDateString('fa-IR') }}</p>
+<p class="text-sm">{{ o.address }} · کد پستی {{ o.postalCode }}</p>
+<ul class="my-4 space-y-2">
+<li v-for="item in o.items" :key="item.id" class="flex justify-between gap-4 text-sm">
+<span>{{ item.name }} × {{ item.quantity }} <small class="text-slate-400">{{ labels[item.status] }}</small>
+</span>
+<span>{{ money(Number(item.price)*item.quantity) }}</span>
+</li>
+</ul>
+<div class="flex flex-wrap justify-between gap-3 border-t pt-4">
+<strong>{{ money(o.total) }}</strong>
+<span class="text-xs text-slate-500">پرداخت در محل</span>
+</div>
+<div v-if="isAdmin||isVendor" class="mt-4 flex flex-wrap gap-2">
+<button v-for="status in nextStatuses(orderStatus(o))" :key="status" :disabled="saving" class="market-secondary" @click="mutate(`${prefix}/orders/${o.id}`,{status})">{{ labels[status] }}</button>
+</div>
+</article>
+</div>
+</div>
+</template>
+</div>
+</div>
+<div v-if="showForm" class="market-overlay" @click.self="showForm=false">
+<form class="market-panel max-h-[90vh] w-full max-w-2xl overflow-auto" @submit.prevent="tab==='categories'?saveCategory():saveProduct()">
+<div class="mb-6 flex justify-between">
+<h2 class="text-xl font-bold">{{ tab==='categories' ? (editing?'ویرایش دسته‌بندی':'افزودن دسته‌بندی') : isAdmin ? 'ثبت کالای جدید فروشگاه' : (editing?'ویرایش کالا':'افزودن کالا') }}</h2>
+<button type="button" aria-label="بستن" @click="showForm=false">✕</button>
+</div>
+<div v-if="error" class="market-error">{{ error }}</div>
+<template v-if="tab==='categories'">
+<label class="market-label">نام<input v-model="category.name" required class="market-input">
+</label>
+<label class="market-label">شناسه URL<input v-model="category.slug" required pattern="[^\s/]+" class="market-input" dir="ltr">
+</label>
+<label class="market-label">توضیحات<textarea v-model="category.description" class="market-input" />
+</label>
+<label class="market-label">ترتیب نمایش<input v-model.number="category.sortOrder" type="number" min="0" class="market-input">
+</label>
+<label class="market-label">دسته مادر<select v-model="category.parentId" class="market-input">
+<option :value="null">بدون دسته مادر</option>
+<option v-for="c in parentOptions" :key="c.id" :value="c.id">{{ c.name }}</option>
+</select>
+</label>
+</template>
+<template v-else>
+<div class="grid gap-x-4 sm:grid-cols-2">
+<label v-for="field in [{key:'name',label:'نام کالا'},{key:'sku',label:'کد کالا'},{key:'brand',label:'برند'},...(isAdmin ? [] : [{key:'image',label:'نشانی تصویر'}])]" :key="field.key" class="market-label">{{ field.label }}<input v-model="(form as any)[field.key]" required class="market-input">
+</label>
+<label class="market-label">قیمت (تومان)<input v-model.number="form.price" type="number" min="1" step="1" required class="market-input">
+</label>
+<label class="market-label">موجودی<input v-model.number="form.stock" type="number" min="0" step="1" required class="market-input">
+</label>
+<label class="market-label">دسته‌بندی<select v-model="form.categoryId" required class="market-input">
+<option value="">انتخاب کنید</option>
+<option v-for="c in allCategories" :key="c.id" :value="c.id">{{ c.name }}</option>
+</select>
+</label>
+<label class="market-label">وضعیت کالا<select v-model="form.condition" class="market-input">
+<option value="NEW">نو</option>
+<option value="REFURBISHED">بازسازی‌شده</option>
+<option value="USED">کارکرده</option>
+</select>
+</label>
+</div>
+<label class="market-label">توضیحات<textarea v-model="form.description" rows="4" class="market-input" />
+</label>
+<label class="market-label">خودروهای سازگار (انتخاب چندگانه)<select v-model="form.variantIds" multiple class="market-input min-h-32">
+<option v-for="v in variants" :key="v.id" :value="v.id">{{ v.name }}</option>
+</select>
+</label>
+<fieldset v-if="isAdmin" class="mb-5 rounded-xl border p-4">
+<legend class="px-2 text-sm font-bold">تصویرهای کالا</legend>
+<p class="mb-3 text-xs leading-6 text-slate-500">فقط مدیر می‌تواند تصویر را از فایل بارگذاری کند. JPEG، PNG یا WebP، حداکثر ۵ مگابایت. تصویر نخست، تصویر اصلی کالا است.</p>
+<div class="mb-3 flex h-40 items-center justify-center overflow-hidden rounded-lg bg-slate-100">
+<img v-if="form.image" :src="form.image" alt="پیش‌نمایش تصویر کالا" class="h-full w-full object-contain">
+<span v-else class="text-xs text-slate-500">پیش‌نمایش تصویر</span>
+</div>
+<div v-if="form.images.length" class="mb-3 flex flex-wrap gap-2">
+<figure v-for="(url, i) in form.images" :key="url" class="relative">
+<img :src="url" :alt="`تصویر ${i + 1}`" class="h-20 w-20 rounded-lg object-cover">
+<button type="button" class="absolute -top-1 -right-1 rounded-full bg-slate-700 px-1.5 text-xs text-white" :disabled="saving || imageUploading" aria-label="حذف تصویر" @click="removeImage(url)">✕</button>
+</figure>
+</div>
+<label class="market-label" :class="{'pointer-events-none opacity-60': imageUploading}">انتخاب فایل‌های تصویر (چندتایی)<input type="file" accept="image/jpeg,image/png,image/webp" multiple class="market-input" :disabled="imageUploading || saving" @change="pickProductImages">
+</label>
+<p v-if="imageUploading" class="text-xs text-slate-500" role="status">در حال بارگذاری تصویر «{{ imageFileName }}»…</p>
+</fieldset>
+<p class="mb-5 text-sm text-slate-500">{{ isAdmin ? 'این کالا به‌نام فروشگاه پارتلی و فعال ثبت می‌شود.' : 'کالا پس از ثبت یا ویرایش برای بررسی مدیر ارسال می‌شود.' }}</p>
+</template>
+<button class="market-primary" :disabled="saving || imageUploading">{{ imageUploading ? 'در حال بارگذاری تصویر…' : saving ? 'در حال ذخیره…' : 'ذخیره' }}</button>
+</form>
+</div>
+</section>
+</template>

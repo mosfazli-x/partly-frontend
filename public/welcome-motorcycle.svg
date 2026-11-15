@@ -1,0 +1,150 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1000" viewBox="0 0 1400 1000" fill="none">
+  <defs>
+    <linearGradient id="studio" x1="170" y1="0" x2="1200" y2="1000" gradientUnits="userSpaceOnUse"><stop stop-color="#DDE3D6"/><stop offset=".52" stop-color="#BDC9B8"/><stop offset="1" stop-color="#A9B8A3"/></linearGradient>
+    <radialGradient id="light" cx="0" cy="0" r="1" gradientTransform="translate(680 310) rotate(90) scale(510 650)" gradientUnits="userSpaceOnUse"><stop stop-color="#F6F2DF" stop-opacity=".65"/><stop offset="1" stop-color="#E4EAD9" stop-opacity="0"/></radialGradient>
+    <linearGradient id="olive" x1="686" y1="337" x2="725" y2="477" gradientUnits="userSpaceOnUse"><stop stop-color="#8D9472"/><stop offset=".28" stop-color="#707B57"/><stop offset=".73" stop-color="#525E40"/><stop offset="1" stop-color="#333E2D"/></linearGradient>
+    <linearGradient id="fender" x1="0" y1="470" x2="0" y2="550" gradientUnits="userSpaceOnUse"><stop stop-color="#929A76"/><stop offset=".45" stop-color="#65724E"/><stop offset="1" stop-color="#414D37"/></linearGradient>
+    <linearGradient id="rubber" x1="0" y1="480" x2="0" y2="720" gradientUnits="userSpaceOnUse"><stop stop-color="#373B35"/><stop offset=".45" stop-color="#222824"/><stop offset="1" stop-color="#151C19"/></linearGradient>
+    <linearGradient id="metal" x1="0" y1="350" x2="0" y2="690" gradientUnits="userSpaceOnUse"><stop stop-color="#F0EEDB"/><stop offset=".23" stop-color="#B8BBAA"/><stop offset=".49" stop-color="#626E64"/><stop offset=".7" stop-color="#D5D7C5"/><stop offset="1" stop-color="#69746A"/></linearGradient>
+    <linearGradient id="fork" x1="935" y1="0" x2="970" y2="0" gradientUnits="userSpaceOnUse"><stop stop-color="#545F53"/><stop offset=".25" stop-color="#D9DCCB"/><stop offset=".48" stop-color="#F1EFDA"/><stop offset=".72" stop-color="#9AA493"/><stop offset="1" stop-color="#525E52"/></linearGradient>
+    <linearGradient id="seat" x1="490" y1="359" x2="490" y2="414" gradientUnits="userSpaceOnUse"><stop stop-color="#535448"/><stop offset=".3" stop-color="#363B32"/><stop offset="1" stop-color="#1D2821"/></linearGradient>
+    <radialGradient id="case"><stop stop-color="#879084"/><stop offset=".7" stop-color="#4A554A"/><stop offset="1" stop-color="#29352D"/></radialGradient>
+    <radialGradient id="headlight"><stop stop-color="#F5EED0"/><stop offset=".6" stop-color="#DEDCC1"/><stop offset="1" stop-color="#929F89"/></radialGradient>
+    <filter id="blur" x="-30%" y="-150%" width="160%" height="400%"><feGaussianBlur stdDeviation="13"/></filter>
+    <filter id="soft" x="-30%" y="-100%" width="160%" height="300%"><feGaussianBlur stdDeviation="5"/></filter>
+    <g id="wheel">
+      <circle r="119" fill="url(#rubber)"/>
+      <circle r="111" stroke="#576052" stroke-opacity=".45" stroke-width="2"/>
+      <circle r="101" stroke="#111B16" stroke-width="3"/>
+      <circle r="91" fill="#8D9C88" fill-opacity=".17" stroke="#BEC4AF" stroke-width="7"/>
+      <circle r="85" stroke="#515D50" stroke-width="3"/>
+      <g stroke="#A8B29F" stroke-width="1.8" opacity=".85">
+        <path d="M-16-16 0-85M16-16 43-74M22 0 74-43M16 16 85 0M0 22 74 43M-16 16 43 74M-22 0 0 85M-16-16-43 74M0-22-74 43M16-16-85 0M22 0-74-43M16 16-43-74"/>
+        <path d="M16-16 0-85M22 0 43-74M16 16 74-43M0 22 85 0M-16 16 74 43M-22 0 43 74M-16-16 0 85M0-22-43 74M16-16-74 43M22 0-85 0M16 16-74-43M0 22-43-74"/>
+      </g>
+      <circle r="48" fill="#778474" stroke="#C0C6B2" stroke-width="3"/>
+      <circle r="36" stroke="#3F5042" stroke-width="9" stroke-dasharray="3 10"/>
+      <circle r="23" fill="#515F50" stroke="#BAC3AE" stroke-width="4"/>
+      <circle r="10" fill="#D2D7C0" stroke="#344535" stroke-width="3"/>
+      <g stroke="#838D78" stroke-width="2" opacity=".35"><path d="m-73-91-5 9m-27 23 2 10m-13 28 5 8m-3 29 7 6m10 29 9 2m21 23 9-1m29 10 7-5m30-2 6-7m24-14 2-9m18-24-2-9m5-30-6-7m-5-29-8-4m-20-23-9 1m-27-11-8 5"/></g>
+    </g>
+  </defs>
+  <path fill="url(#studio)" d="M0 0h1400v1000H0z"/>
+  <path fill="url(#light)" d="M0 0h1400v1000H0z"/>
+  <circle cx="723" cy="354" r="290" fill="#E7E9D7" fill-opacity=".18"/>
+  <circle cx="723" cy="354" r="289" stroke="#F1EFDD" stroke-opacity=".17"/>
+  <ellipse cx="711" cy="721" rx="518" ry="26" fill="#354832" opacity=".16" filter="url(#blur)"/>
+  <ellipse cx="703" cy="719" rx="401" ry="10" fill="#32422E" opacity=".18" filter="url(#soft)"/>
+  <!-- Far-side mechanical elements -->
+  <path d="m485 420 98 174 181 10 117-188" stroke="#26392B" stroke-width="18" stroke-linejoin="round"/>
+  <path d="m845 420 98 154 112 36" stroke="#58654F" stroke-width="13" stroke-linecap="round"/>
+  <path d="m789 526 52 56 156 60" stroke="#303D32" stroke-width="21" stroke-linecap="round"/>
+  <path d="m789 526 52 56 156 60" stroke="#8C9580" stroke-width="12" stroke-linecap="round"/>
+  <use href="#wheel" x="370" y="597"/>
+  <use href="#wheel" x="1052" y="597"/>
+  <!-- Rear fender and tail -->
+  <path d="M244 515c28-54 99-76 158-62 37 9 66 32 82 57l-18 7c-26-37-61-54-100-54-45 0-82 21-105 58z" fill="url(#fender)"/>
+  <path d="M253 509c39-49 103-64 155-43" stroke="#B0B795" stroke-width="3" stroke-linecap="round" opacity=".65"/>
+  <path d="m281 410-30 70 30 10" stroke="#354632" stroke-width="8" stroke-linecap="round"/>
+  <path d="m260 416-28 5-5 17 32-3z" fill="#353E30"/>
+  <path d="m232 422 20-3-2 10-20 3z" fill="#8B6450"/>
+  <!-- Frame -->
+  <path d="m356 417 217 8 262-18-80 191H561L456 438" stroke="#202E25" stroke-width="19" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="m373 418 202 13 251-20-76 180H568L462 443" stroke="#5B684F" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="m372 597 194-10 58-139M372 597l128-142" stroke="#293B2D" stroke-width="15" stroke-linejoin="round"/>
+  <path d="m383 593 180-9" stroke="#748065" stroke-width="3"/>
+  <!-- Rear suspension -->
+  <path d="m462 440-63 143" stroke="#242F25" stroke-width="18" stroke-linecap="round"/>
+  <path d="m462 440-63 143" stroke="url(#metal)" stroke-width="9" stroke-linecap="round"/>
+  <path d="m449 454 13 8-24 4 16 10-25 4 17 10-25 4 17 10-24 4 16 10-24 4 16 10-24 4 15 9" stroke="#C4C8B1" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="461" cy="440" r="10" fill="#9AA68E" stroke="#33442F" stroke-width="4"/>
+  <circle cx="400" cy="580" r="10" fill="#A2AD94" stroke="#33442F" stroke-width="4"/>
+  <!-- Side cover -->
+  <path d="m477 440 112 3-34 83-49-7z" fill="#46563B" stroke="#273A2B" stroke-width="3"/>
+  <path d="m492 452 77 2-9 19-59-1z" fill="#718061" opacity=".65"/>
+  <path d="m505 486 43 1m-38 8 34 1" stroke="#98A285" stroke-opacity=".5" stroke-width="3"/>
+  <!-- Engine block, cylinders and cooling fins -->
+  <path d="m627 439 91-3 33 88-99 25-51-37z" fill="#25372B" stroke="#9DA68F" stroke-width="3"/>
+  <path d="m631 451-28 58 53 30 29-69z" fill="#515F4D"/>
+  <path d="m681 443 44 3 27 66-53 15z" fill="#66735F"/>
+  <g stroke="#BBC1AA" stroke-width="4" stroke-linecap="round">
+    <path d="m624 455 46 18m-51-7 46 18m-51-7 46 18m-51-7 46 18m-50-6 45 17m39-65 42-11m-38 22 42-11m-38 22 42-11m-38 22 42-11m-38 22 42-11"/>
+  </g>
+  <path d="m626 440 10-15 42 16-3 17zM679 433l43-10 10 17-47 12z" fill="#394A37" stroke="#AAB49A" stroke-width="2"/>
+  <path d="m631 430 40 15m15-6 33-8" stroke="#DADEC6" stroke-width="3"/>
+  <path d="M592 516c25-16 51-6 66 10l51-12c37-8 67 11 70 43l-2 36c-2 23-24 37-52 37H619c-35 0-58-20-57-49 1-25 9-49 30-65Z" fill="url(#metal)" stroke="#293C2E" stroke-width="4"/>
+  <circle cx="626" cy="575" r="49" fill="url(#case)" stroke="#B0BAA2" stroke-width="3"/>
+  <circle cx="626" cy="575" r="37" stroke="#76846F" stroke-width="2"/>
+  <circle cx="626" cy="575" r="12" fill="#56664F" stroke="#BFC6AE" stroke-width="2"/>
+  <path d="M698 541c30-10 56 4 59 27v27h-64z" fill="#56674F" stroke="#AEB99F" stroke-width="2"/>
+  <g fill="#D3D7BF" stroke="#3C503B" stroke-width="2"><circle cx="609" cy="535" r="4"/><circle cx="664" cy="561" r="4"/><circle cx="641" cy="615" r="4"/><circle cx="585" cy="589" r="4"/><circle cx="735" cy="550" r="4"/><circle cx="750" cy="608" r="4"/></g>
+  <path d="m590 460-25 15 3 48m176-71 34 17-11 49" stroke="#293C2D" stroke-width="8" stroke-linecap="round"/>
+  <path d="M679 422c-17 19-12 29-7 40" stroke="#242E25" stroke-width="5"/>
+  <!-- Exhaust headers and brushed silencer -->
+  <path d="M739 490c39 4 59 41 56 71-3 34-28 65-66 69l-176 12" stroke="#29372B" stroke-width="22" stroke-linecap="round"/>
+  <path d="M739 490c39 4 59 41 56 71-3 34-28 65-66 69l-176 12" stroke="url(#metal)" stroke-width="15" stroke-linecap="round"/>
+  <path d="M748 492c26 9 43 37 42 61" stroke="#E0DEC5" stroke-width="3" stroke-linecap="round" opacity=".8"/>
+  <path d="m563 628-228 12c-14 1-28 9-34 18l5 18 256-17 21-17z" fill="url(#metal)" stroke="#46573F" stroke-width="3"/>
+  <path d="m327 649 224-13" stroke="#E5E4CB" stroke-width="3" stroke-linecap="round" opacity=".7"/>
+  <path d="m308 651-7 7 5 18 17-2-6-22z" fill="#3A4A35"/>
+  <path d="m487 636 4 26m8-27 3 26" stroke="#59694F" stroke-width="4"/>
+  <!-- Foot controls -->
+  <path d="m676 595 35 29 41-4" stroke="#2B3A2C" stroke-width="8" stroke-linecap="round"/>
+  <path d="m708 624 47-3" stroke="#B2BCA2" stroke-width="8" stroke-linecap="round"/>
+  <path d="m733 618 24-1" stroke="#26382A" stroke-width="11" stroke-linecap="round"/>
+  <path d="m610 607-29 15-35-3" stroke="#8E9C82" stroke-width="5" stroke-linecap="round"/>
+  <path d="m536 619 19 1" stroke="#283A2C" stroke-width="9" stroke-linecap="round"/>
+  <!-- Sculpted fuel tank -->
+  <path d="M571 394c15-34 48-62 97-64 56-3 119 21 152 55 13 13 18 28 10 40-10 15-49 24-92 27-48 3-76-1-104-15-22-11-42-21-63-23z" fill="url(#olive)" stroke="#35452F" stroke-width="3"/>
+  <path d="M588 389c22-31 49-46 84-47 47-1 93 17 125 42-52-28-115-38-156-19-18 8-35 17-53 24Z" fill="#BCC0A0" opacity=".43"/>
+  <path d="M584 405c38 3 52 27 104 30 49 4 94-2 128-14" stroke="#C1C3A1" stroke-width="2" opacity=".7"/>
+  <path d="M647 401c16-10 51-10 68-1l-7 18c-23 4-43 1-60-6z" fill="#35472F" opacity=".6"/>
+  <ellipse cx="678" cy="331" rx="20" ry="5" fill="#344530"/>
+  <path d="M661 329v-5c0-5 33-5 34 0v5c-6 5-27 5-34 0Z" fill="url(#metal)" stroke="#56654D" stroke-width="2"/>
+  <path d="m671 323 14-1" stroke="#E5E5CC" stroke-width="2" stroke-linecap="round"/>
+  <!-- Cafe seat and tail cowl -->
+  <path d="M284 395c22-24 39-39 72-40l62 4 48 32-5 25-169-2z" fill="url(#olive)" stroke="#33442D" stroke-width="3"/>
+  <path d="M305 386c25-26 57-28 95-16" stroke="#AFB695" stroke-width="3" stroke-linecap="round" opacity=".6"/>
+  <path d="M407 374c42 5 60 12 95 11l65-1c14 1 22 11 20 20l-9 12-153-3-26-12z" fill="url(#seat)" stroke="#25362A" stroke-width="3"/>
+  <path d="M419 383c46 11 87 9 146 9" stroke="#9B9D82" stroke-width="2" opacity=".65"/>
+  <g stroke="#737A64" stroke-width="2" opacity=".65"><path d="m438 386-5 17m24-13-4 15m24-13-3 14m23-14-2 14m22-14-1 14m22-14v14m20-14 1 13"/></g>
+  <path d="m297 418 125 6 152-1" stroke="#A4AC90" stroke-width="3" stroke-linecap="round"/>
+  <!-- Steering assembly -->
+  <path d="m822 391 51-19 24 45-50 20z" fill="#31452F"/>
+  <path d="m869 380 55 109" stroke="#25382C" stroke-width="25"/>
+  <path d="m886 410 93 186" stroke="#3F5040" stroke-width="17" stroke-linecap="round"/>
+  <path d="m909 402 102 193" stroke="#293C2E" stroke-width="19" stroke-linecap="round"/>
+  <path d="m909 402 62 118" stroke="url(#metal)" stroke-width="12"/>
+  <path d="m886 410 63 121" stroke="url(#metal)" stroke-width="10"/>
+  <path d="m963 508 47 88" stroke="#64745B" stroke-width="23" stroke-linecap="round"/>
+  <path d="m944 519 43 80" stroke="#7E8D70" stroke-width="17" stroke-linecap="round"/>
+  <path d="m967 516 41 78" stroke="#D1D5B9" stroke-width="4" stroke-linecap="round" opacity=".75"/>
+  <path d="m988 594 61 3" stroke="#51634A" stroke-width="16" stroke-linecap="round"/>
+  <circle cx="1052" cy="597" r="12" fill="#CFD4B9" stroke="#40563D" stroke-width="4"/>
+  <path d="m878 403 43-16m-31 39 42-15" stroke="#9DA98E" stroke-width="9" stroke-linecap="round"/>
+  <!-- Front fender -->
+  <path d="M951 526c29-37 70-52 112-49 34 2 63 17 85 42l-14 12c-24-22-45-32-74-33-35-2-69 12-94 39z" fill="url(#fender)" stroke="#43573B" stroke-width="2"/>
+  <path d="M969 512c47-34 103-34 145-8" stroke="#BFC5A4" stroke-width="3" stroke-linecap="round" opacity=".65"/>
+  <path d="m985 530 48 47m70-68-39 70" stroke="#607353" stroke-width="4"/>
+  <!-- Headlamp, cables, bars and instruments -->
+  <path d="m905 366 30-11 29 14 3 46-32 7-24-22z" fill="#2E4031" stroke="#68795F" stroke-width="3"/>
+  <ellipse cx="965" cy="388" rx="20" ry="32" transform="rotate(-13 965 388)" fill="url(#metal)" stroke="#334B35" stroke-width="3"/>
+  <ellipse cx="970" cy="387" rx="13" ry="25" transform="rotate(-13 970 387)" fill="url(#headlight)"/>
+  <path d="m968 369 7 32m-12-22 13-3m-11 14 13-3" stroke="#F5F0D4" stroke-width="2" opacity=".65"/>
+  <path d="M901 378c-25-31-49-42-55-63m56 61c44 21 34 95 60 146" stroke="#263B2B" stroke-width="3" stroke-linecap="round"/>
+  <path d="m899 373-23-43-35-12-28 10" stroke="#344936" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="m899 371-24-43-35-12-25 10" stroke="#A2AE92" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="m813 327-29 8" stroke="#26372B" stroke-width="13" stroke-linecap="round"/>
+  <path d="m810 341-29 7-9-5" stroke="#C1C9AE" stroke-width="4" stroke-linecap="round"/>
+  <path d="m883 332 45-11 31 10" stroke="#8E9D81" stroke-width="8" stroke-linecap="round"/>
+  <path d="m945 327 29 10" stroke="#273A2D" stroke-width="12" stroke-linecap="round"/>
+  <path d="m953 343 26 9 9-5" stroke="#B5C0A3" stroke-width="3" stroke-linecap="round"/>
+  <path d="m852 319-7-25" stroke="#4F654B" stroke-width="5"/>
+  <ellipse cx="843" cy="290" rx="23" ry="10" transform="rotate(-12 843 290)" fill="#2D4232" stroke="#85967A" stroke-width="3"/>
+  <ellipse cx="843" cy="288" rx="17" ry="6" transform="rotate(-12 843 288)" fill="#ADBBA1"/>
+  <path d="m930 320 5-36 17-10" stroke="#40583E" stroke-width="4" stroke-linecap="round"/>
+  <ellipse cx="966" cy="272" rx="23" ry="11" transform="rotate(-9 966 272)" fill="#344A36" stroke="#8B9E7F" stroke-width="3"/>
+  <path d="M951 271c8-5 18-6 28-2" stroke="#C2CEB2" stroke-width="2" stroke-linecap="round" opacity=".65"/>
+  <path d="m910 422 22 5" stroke="#6B7D5A" stroke-width="5" stroke-linecap="round"/>
+  <ellipse cx="936" cy="428" rx="10" ry="7" fill="#B4A275" stroke="#4C6042" stroke-width="3"/>
+</svg>

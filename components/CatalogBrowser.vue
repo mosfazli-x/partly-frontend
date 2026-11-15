@@ -4,7 +4,8 @@ const route = useRoute(), router = useRouter()
 const props = withDefaults(defineProps<{ initialType?: 'CAR' | 'MOTORCYCLE'; showTypeToggle?: boolean }>(), { initialType: 'CAR', showTypeToggle: false })
 const products = ref<any[]>([]), categories = ref<any[]>([]), makes = ref<any[]>([])
 const vehicleType = ref<'CAR' | 'MOTORCYCLE'>(props.initialType)
-const makeId = ref(''), modelId = ref(''), variantId = ref(''), query = ref(String(route.query.q || '')), category = ref(String(route.query.category || '')), sort = ref('newest'), page = ref(1), total = ref(0), pages = ref(0), busy = ref(true), error = ref(''), notice = ref('')
+const makeId = ref(''), modelId = ref(''), variantId = ref(String(route.query.variant || '')), query = ref(String(route.query.q || '')), category = ref(String(route.query.category || '')), sort = ref('newest'), page = ref(1), total = ref(0), pages = ref(0), busy = ref(true), error = ref(''), notice = ref('')
+const selectedVehicle = ref<string | null>(null)
 const models = computed(() => makes.value.find(m => m.id === makeId.value)?.models || [])
 const variants = computed(() => models.value.find((m: any) => m.id === modelId.value)?.variants || [])
 const isMoto = computed(() => vehicleType.value === 'MOTORCYCLE')
@@ -12,6 +13,8 @@ const makeLabel = computed(() => (isMoto.value ? 'برند موتورسیکلت'
 const modelLabel = computed(() => (isMoto.value ? 'مدل موتورسیکلت' : 'مدل خودرو'))
 const variantLabel = computed(() => (isMoto.value ? 'تیپ موتورسیکلت' : 'تیپ خودرو'))
 const vehicleBusy = ref(true), vehicleError = ref('')
+// Keep the 3D garage in the codebase, but hide it until its model archive is ready.
+const garageEnabled = useGarageEnabled()
 let request = 0, vehicleRequest = 0
 
 async function loadMakes() {
@@ -33,6 +36,7 @@ function selectVehicle(selection: { makeId: string; modelId: string; variantId: 
 }
 function clearVehicle() {
   makeId.value = ''; modelId.value = ''; variantId.value = ''
+  selectedVehicle.value = null
   load(true)
 }
 
@@ -48,11 +52,13 @@ async function load(reset = false) {
     if (current !== request) return
     let list = result.products || []
     if (variantId.value) {
+      selectedVehicle.value = result.vehicle ? `${result.vehicle.model?.make?.name || ''} ${result.vehicle.model?.name || ''} ${result.vehicle.name || ''}`.trim() : null
       if (sort.value !== 'newest') list.sort((a: any, b: any) => (Number(a.price) - Number(b.price)) * (sort.value === 'price-asc' ? 1 : -1))
       total.value = list.length
       pages.value = Math.ceil(list.length / 12)
       list = list.slice((page.value - 1) * 12, page.value * 12)
     } else {
+      selectedVehicle.value = null
       total.value = result.total
       pages.value = result.pages
     }
@@ -68,6 +74,7 @@ async function switchType(type: 'CAR' | 'MOTORCYCLE') {
   if (vehicleType.value === type) return
   vehicleType.value = type
   makeId.value = ''; modelId.value = ''; variantId.value = ''
+  selectedVehicle.value = null
   await loadMakes()
   await load(true)
 }
@@ -81,6 +88,23 @@ onMounted(async () => {
   }
   await load()
 })
+
+// Brand pages link straight to a model's first trim. Resolve its make and model
+// from the loaded vehicle tree so the compact filters always reflect it.
+const linkedVariant = computed(() => {
+  const linked = String(route.query.variant || '')
+  if (!linked) return null
+  for (const make of makes.value) for (const model of make.models || []) {
+    const variant = (model.variants || []).find((item: any) => item.id === linked)
+    if (variant) return { makeId: make.id, modelId: model.id, variantId: variant.id }
+  }
+  return null
+})
+watch(linkedVariant, linked => {
+  if (!linked || linked.variantId === variantId.value) return
+  makeId.value = linked.makeId; modelId.value = linked.modelId; variantId.value = linked.variantId
+  load(true)
+}, { immediate: true })
 
 function addItem(p: any) { add(p); notice.value = `${p.name} به سبد خرید اضافه شد.` }
 
@@ -107,8 +131,9 @@ watch(() => route.query.q, q => { query.value = String(q || ''); load(true) })
       <button type="button" role="tab" :aria-selected="isMoto" class="rounded-xl px-5 py-2 text-sm font-bold transition" :class="isMoto ? 'bg-slate-900 text-white' : 'text-slate-500'" @click="switchType('MOTORCYCLE')">🏍️ موتورسیکلت</button>
     </div>
 
-    <VehicleGarage v-if="!isMoto" :makes="makes" :make-id="makeId" :model-id="modelId" :variant-id="variantId" :loading="vehicleBusy" :error="vehicleError" @select="selectVehicle" @clear="clearVehicle" @retry="loadMakes" />
-    <div v-else-if="vehicleError" class="market-error" role="alert">{{ vehicleError }} <button type="button" class="underline" @click="loadMakes">تلاش دوباره</button></div>
+    <VehicleGarage v-if="!isMoto && garageEnabled" :makes="makes" :make-id="makeId" :model-id="modelId" :variant-id="variantId" :loading="vehicleBusy" :error="vehicleError" @select="selectVehicle" @clear="clearVehicle" @retry="loadMakes" />
+    <VehicleBrandStrip v-if="!isMoto && !garageEnabled" />
+    <div v-if="vehicleError && (isMoto || garageEnabled)" class="market-error" role="alert">{{ vehicleError }} <button type="button" class="underline" @click="loadMakes">تلاش دوباره</button></div>
 
     <form class="market-panel mb-7" @submit.prevent="search">
       <div class="grid gap-4" :class="isMoto ? 'sm:grid-cols-2 lg:grid-cols-4' : 'sm:grid-cols-1'">
@@ -151,6 +176,25 @@ watch(() => route.query.q, q => { query.value = String(q || ''); load(true) })
       </div>
     </form>
 
+    <div v-if="makes.length" class="mb-8 market-panel rounded-xl border border-slate-200 p-6">
+      <h3 class="mb-4 text-lg font-bold">همه خودروها</h3>
+      <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div v-for="m in makes" :key="m.id" class="rounded-lg border border-slate-100 p-4">
+          <h4 class="mb-3 text-base font-semibold">{{ m.name }}</h4>
+          <div class="grid gap-3 sm:grid-cols-2">
+            <div v-for="model in m.models" :key="model.id" class="rounded border border-slate-200 p-3">
+              <p class="mb-2 text-sm font-medium">{{ model.name }}</p>
+              <ul class="space-y-1">
+                <li v-for="variant in model.variants" :key="variant.id" class="text-sm">
+                  <button type="button" class="w-full text-left underline underline-offset-4 hover:text-slate-900" @click="selectVehicle({ makeId: m.id, modelId: model.id, variantId: variant.id })">{{ variant.name }}</button>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div id="catalog-results" class="scroll-mt-28" aria-live="polite" :aria-busy="busy">
     <div v-if="error" class="market-error" role="alert">{{ error }} <button class="underline" @click="load()">تلاش دوباره</button></div>
     <div v-if="notice" class="market-success" role="status">{{ notice }} <NuxtLink to="/cart" class="underline">مشاهده سبد</NuxtLink></div>
@@ -171,6 +215,7 @@ watch(() => route.query.q, q => { query.value = String(q || ''); load(true) })
         </div>
       </article>
     </div>
+    <p v-else-if="!error && selectedVehicle" class="market-panel market-empty">هیچ قطعه‌ای برای {{ selectedVehicle }} ثبت نشده است.</p>
     <p v-else-if="!error" class="market-panel market-empty">کالایی با این فیلترها یافت نشد. جستجو یا {{ isMoto ? 'موتورسیکلت' : 'خودرو' }} دیگری را امتحان کنید.</p>
 
     <nav v-if="pages > 1 && !busy" class="mt-8 flex items-center justify-center gap-4" aria-label="صفحه‌بندی">
