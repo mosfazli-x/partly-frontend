@@ -14,7 +14,9 @@ type HydrationStrategies = {
 type LazyComponent<T> = DefineComponent<HydrationStrategies, {}, {}, {}, {}, {}, {}, { hydrated: () => void }> & T
 
 interface _GlobalComponents {
+  BrandLogo: typeof import("../../components/BrandLogo.vue")['default']
   CatalogBrowser: typeof import("../../components/CatalogBrowser.vue")['default']
+  VehicleBrandStrip: typeof import("../../components/VehicleBrandStrip.vue")['default']
   VehicleGarage: typeof import("../../components/VehicleGarage.vue")['default']
   VehicleScene: typeof import("../../components/VehicleScene.client.vue")['default']
   NuxtWelcome: typeof import("../../node_modules/nuxt/dist/app/components/welcome.vue")['default']
@@ -40,7 +42,9 @@ interface _GlobalComponents {
   Html: typeof import("../../node_modules/nuxt/dist/head/runtime/components")['Html']
   Body: typeof import("../../node_modules/nuxt/dist/head/runtime/components")['Body']
   NuxtIsland: typeof import("../../node_modules/nuxt/dist/app/components/nuxt-island")['default']
+  LazyBrandLogo: LazyComponent<typeof import("../../components/BrandLogo.vue")['default']>
   LazyCatalogBrowser: LazyComponent<typeof import("../../components/CatalogBrowser.vue")['default']>
+  LazyVehicleBrandStrip: LazyComponent<typeof import("../../components/VehicleBrandStrip.vue")['default']>
   LazyVehicleGarage: LazyComponent<typeof import("../../components/VehicleGarage.vue")['default']>
   LazyVehicleScene: LazyComponent<typeof import("../../components/VehicleScene.client.vue")['default']>
   LazyNuxtWelcome: LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/welcome.vue")['default']>

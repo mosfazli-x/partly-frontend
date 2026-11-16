@@ -2,7 +2,11 @@
 const { api, add, money, message } = useMarketplace()
 const route = useRoute(), router = useRouter()
 
-type Option = { id: string; name: string; years?: string | null }
+const failedImages = ref<Record<string, boolean>>({})
+const selectedMake = computed(() => makes.value.find((make: any) => make.id === makeId.value))
+const vehicleLabel = computed(() => [selectedMake.value?.name, selectedModel.value?.name, year.value].filter(Boolean).join(' / '))
+let mounted = false
+let writtenQuery = ''
 const makeList = ref<any[]>([]), categoryList = ref<any[]>([])
 const makeId = ref(String(route.query.makeId || ''))
 const modelId = ref(String(route.query.modelId || ''))
@@ -26,7 +30,6 @@ const makes = computed(() => makeList.value.filter((make: any) => (make.models |
 const models = computed((): any[] => makeList.value.find((make: any) => make.id === makeId.value)?.models || [])
 const selectedModel = computed((): any => models.value.find((model: any) => model.id === modelId.value) || null)
 const categories = computed(() => categoryList.value.flatMap((item: any) => [item, ...(item.children || [])]))
-const today = new Date().getFullYear()
 
 // Only explicit trim years are trusted; model production dates do not prove trim fitment.
 function yearRange(value: string | null | undefined) {
@@ -38,9 +41,11 @@ function yearRange(value: string | null | undefined) {
 const knownYears = computed(() => {
   const ranges = (selectedModel.value?.variants || []).map((variant: any) => yearRange(variant.years)).filter(Boolean) as { from: number; to: number }[]
   if (!ranges.length) return []
-  const years: number[] = []
-  for (let value = Math.max(...ranges.map(range => range.from)); value <= Math.min(...ranges.map(range => range.to)); value++) years.push(value)
-  return years.reverse()
+  const years = new Set<number>()
+  for (const range of ranges) {
+    for (let value = range.from; value <= range.to; value++) years.add(value)
+  }
+  return [...years].sort((a, b) => b - a)
 })
 const yearHint = computed(() => {
   if (!modelId.value) return 'ابتدا مدل خودرو را انتخاب کنید.'
@@ -68,6 +73,7 @@ async function loadVehicles() {
     categoryList.value = Array.isArray(allCategories) ? allCategories : []
     if (makeId.value && !makes.value.some((item: any) => item.id === makeId.value)) makeId.value = ''
     if (modelId.value && !selectedModel.value) modelId.value = ''
+    if (year.value && !knownYears.value.includes(Number(year.value))) year.value = ''
   } catch (e) {
     if (current === vehicleRequest) vehicleError.value = message(e)
   } finally {
@@ -85,18 +91,23 @@ function queryParams() {
     ...(query.value.trim() && { q: query.value.trim() }),
   }
 }
+function queryKey(value: Record<string, unknown>) {
+  return JSON.stringify(Object.entries(value).filter(([, value]) => value !== undefined).map(([key, value]) => [key, String(value)]).sort(([a], [b]) => a.localeCompare(b)))
+}
 async function syncUrl() {
   const { limit: _limit, ...params } = queryParams()
-  await router.replace({ query: params })
+  writtenQuery = queryKey(params)
+  if (queryKey(route.query) !== writtenQuery) await router.replace({ query: params })
 }
 
 async function load(reset = false) {
   if (reset) page.value = 1
   const current = ++request
   busy.value = true; error.value = ''; notice.value = ''
-  await syncUrl()
   try {
-    const params = new URLSearchParams()
+    await syncUrl()
+    if (current !== request) return
+    const params = new URLSearchParams({ vehicleType: 'CAR' })
     for (const [key, value] of Object.entries(queryParams())) params.set(key, String(value))
     const result: any = await api(`/api/products?${params}`)
     if (current !== request) return
@@ -133,24 +144,42 @@ function addItem(product: any) {
   add(product)
   notice.value = `${product.name} به سبد خرید اضافه شد.`
 }
+function resetFilters() {
+  makeId.value = ''; modelId.value = ''; year.value = ''; category.value = ''; query.value = ''
+  load(true)
+}
 function retry() { error.value ? load() : loadVehicles() }
 
-onMounted(async () => { await loadVehicles(); await load() })
+watch(() => route.query, (params) => {
+  if (!mounted || queryKey(params) === writtenQuery) return
+  makeId.value = String(params.makeId || '')
+  modelId.value = String(params.modelId || '')
+  year.value = String(params.year || '')
+  category.value = String(params.category || '')
+  query.value = String(params.q || '')
+  sort.value = ['newest', 'price-asc', 'price-desc'].includes(String(params.sort)) ? String(params.sort) : 'newest'
+  page.value = Math.max(1, Math.floor(Number(params.page) || 1))
+  if (!models.value.some((model: any) => model.id === modelId.value)) modelId.value = ''
+  if (!knownYears.value.includes(Number(year.value))) year.value = ''
+  load()
+})
+onMounted(async () => { await loadVehicles(); await load(); mounted = true })
 </script>
 
 <template>
   <div class="store-page">
     <section class="store-head">
       <div class="shell">
-        <p class="store-eyebrow">فروشگاه قطعات خودرو</p>
+        <nav class="store-breadcrumb" aria-label="مسیر صفحه"><NuxtLink to="/">انتخاب وسیله نقلیه</NuxtLink><span aria-hidden="true">/</span><span aria-current="page">قطعات خودرو</span></nav>
         <div class="store-title-row">
           <div>
-            <h1 class="store-title">قطعات خودرو</h1>
-            <p class="store-lead">برند، مدل و سال ساخت خودرو را انتخاب کنید تا فقط قطعات سازگار را ببینید.</p>
+            <p class="store-eyebrow">قدم دوم / قطعه مناسب را پیدا کنید</p>
+            <h1 class="store-title">قطعه درست، <span>برای خودروی شما.</span></h1>
+            <p class="store-lead">خودرویتان را معرفی کنید؛ پیدا کردن قطعه را ساده‌تر می‌کنیم.</p>
           </div>
           <NuxtLink to="/" class="store-back">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></svg>
-            بازگشت به صفحه اصلی
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m3 15 2-6h14l2 6v5h-3v-3H6v3H3v-5Zm3-6 2-5h8l2 5M6 13h2m8 0h2"/></svg>
+            خودرو سواری <span>تغییر نوع</span>
           </NuxtLink>
         </div>
       </div>
@@ -159,7 +188,7 @@ onMounted(async () => { await loadVehicles(); await load() })
     <main class="shell store-main">
       <section class="filter-panel" aria-labelledby="filters-title">
         <div class="filter-head">
-          <h2 id="filters-title">انتخاب خودرو</h2>
+          <div class="filter-heading"><span class="filter-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 7h16M4 17h16M8 4v6m8 4v6"/></svg></span><div><h2 id="filters-title">خودروی شما چیست؟</h2><p>انتخاب خودرو اختیاری است؛ می‌توانید همه قطعات را هم ببینید.</p></div></div>
           <p v-if="vehicleError" class="filter-error" role="alert">{{ vehicleError }} <button type="button" @click="loadVehicles">تلاش دوباره</button></p>
           <p v-else-if="vehicleBusy" class="filter-note" role="status">در حال دریافت فهرست خودروها…</p>
           <p v-else-if="!makes.length" class="filter-note">فهرست خودروها هنوز در دسترس نیست؛ برای پذیرش فیلتر خودرو داده‌ای ثبت نشده است.</p>
@@ -168,26 +197,26 @@ onMounted(async () => { await loadVehicles(); await load() })
 
         <div class="filter-grid">
           <label class="filter-field">
-            <span>برند خودرو</span>
+            <span><b class="field-step">۱</b> برند خودرو</span>
             <select v-model="makeId" :disabled="!makes.length" @change="onMake">
               <option value="">همه برندها</option>
               <option v-for="make in makes" :key="make.id" :value="make.id">{{ make.name }}</option>
             </select>
           </label>
           <label class="filter-field">
-            <span>مدل خودرو</span>
+            <span><b class="field-step">۲</b> مدل خودرو</span>
             <select v-model="modelId" :disabled="!makeId || !models.length" @change="onModel">
               <option value="">{{ makeId ? 'همه مدل‌ها' : 'ابتدا برند را انتخاب کنید' }}</option>
               <option v-for="model in models" :key="model.id" :value="model.id">{{ model.name }}</option>
             </select>
           </label>
           <label class="filter-field">
-            <span>سال ساخت</span>
-            <select v-model="year" :disabled="!knownYears.length" @change="onYear">
+            <span><b class="field-step">۳</b> سال ساخت <em>میلادی</em></span>
+            <select v-model="year" :disabled="!knownYears.length" aria-describedby="year-hint" @change="onYear">
               <option value="">{{ knownYears.length ? 'همه سال‌ها' : 'در دسترس نیست' }}</option>
               <option v-for="value in knownYears" :key="value" :value="String(value)">{{ value.toLocaleString('fa-IR', { useGrouping: false }) }}</option>
             </select>
-            <small>{{ yearHint }}</small>
+            <small id="year-hint">{{ yearHint }}</small>
           </label>
           <label class="filter-field">
             <span>دسته‌بندی</span>
@@ -203,6 +232,7 @@ onMounted(async () => { await loadVehicles(); await load() })
             </label>
             <button type="submit" class="filter-submit">جستجو</button>
           </form>
+          <div class="vehicle-context"><span class="context-dot" aria-hidden="true"></span><strong>{{ vehicleLabel || 'همه خودروهای سواری' }}</strong><small>{{ vehicleLabel ? 'نتایج بر اساس سازگاری با انتخاب شما' : 'با انتخاب خودرو، نتایج دقیق‌تری ببینید' }}</small></div>
         </div>
       </section>
 
@@ -237,8 +267,8 @@ onMounted(async () => { await loadVehicles(); await load() })
         <ul v-else-if="products.length" class="product-grid">
           <li v-for="product in products" :key="product.id" class="product-card">
             <NuxtLink :to="`/products/${product.slug}`" class="product-media">
-              <img v-if="product.image" :src="product.image" :alt="product.name" loading="lazy" decoding="async" width="320" height="240" @error="($event.target as HTMLImageElement).hidden = true">
-              <span v-else class="product-fallback" aria-hidden="true">{{ product.name.slice(0, 1) }}</span>
+              <img v-if="product.image && !failedImages[product.id]" :src="product.image" :alt="product.name" loading="lazy" decoding="async" width="320" height="240" @error="failedImages[product.id] = true">
+              <span v-else class="product-fallback" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m28 7 4 8 9 2-6 7 1 10-9-4-8 5-2-10-8-5 9-4 2-9Z"/><circle cx="25" cy="22" r="6"/></svg></span>
               <span class="stock-badge" :class="{ 'is-out': !product.stock }">{{ product.stock ? 'موجود' : 'ناموجود' }}</span>
             </NuxtLink>
             <div class="product-body">
@@ -248,7 +278,7 @@ onMounted(async () => { await loadVehicles(); await load() })
                 <strong>{{ money(product.price) }}</strong>
                 <button type="button" class="product-add" :disabled="!product.stock" :aria-label="`افزودن ${product.name} به سبد خرید`" @click="addItem(product)">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-                  سبد
+                  افزودن
                 </button>
               </div>
             </div>
@@ -258,7 +288,7 @@ onMounted(async () => { await loadVehicles(); await load() })
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="m14 7 3 3m-4.5 1.5 3 3M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16l-3-2-2 2-2-2-2 2-2-2-3 2Z"/></svg>
           <strong>{{ activeFilters.length ? 'کالایی با این فیلترها پیدا نشد.' : 'هنوز کالایی در این فروشگاه ثبت نشده است.' }}</strong>
           <p>{{ activeFilters.length ? 'فیلترها را تغییر دهید یا قطعه را با نام دیگری جستجو کنید.' : 'به‌زودی قطعات خودرو در پارتلی ارائه می‌شود.' }}</p>
-          <button v-if="activeFilters.length" type="button" @click="clearFilter('query'); clearFilter('category'); clearVehicle()">نمایش همه کالاها</button>
+          <button v-if="activeFilters.length" type="button" @click="resetFilters">نمایش همه کالاها</button>
         </div>
 
         <nav v-if="pages > 1 && !busy" class="pagination" aria-label="صفحه‌بندی">
@@ -367,6 +397,95 @@ onMounted(async () => { await loadVehicles(); await load() })
   .product-body { padding: 12px 12px 13px; }
   .product-foot { flex-wrap: wrap; }
   .product-add { min-height: 34px; }
+}
+.store-page { --ink: #202623; --muted: #737770; --border: #e6e6de; --accent: #c94822; background: #f8f7f4; padding-bottom: 80px; }
+.store-head { background: transparent; border: 0; }
+.store-head .shell { padding-block: 28px 36px; }
+.store-breadcrumb { display: flex; gap: 12px; align-items: center; margin-bottom: 30px; font-size: 11px; color: #76796f; }
+.store-breadcrumb a:hover { color: var(--accent); }
+.store-breadcrumb [aria-current] { color: var(--ink); }
+.store-eyebrow { color: var(--accent); font-size: 11px; }
+.store-title-row { align-items: center; }
+.store-title { font-size: clamp(28px, 3.7vw, 45px); line-height: 1.7; letter-spacing: -1.5px; margin-top: 8px; }
+.store-title span { font-weight: 500; }
+.store-lead { margin-top: 8px; }
+.store-back { padding: 12px 16px; border: 1px solid var(--border); border-radius: 12px; background: #fff; color: var(--ink); }
+.store-back svg { width: 25px; height: 25px; }
+.store-back span { margin-inline-start: 18px; color: var(--accent); font-size: 10px; }
+.store-main { padding-top: 0; }
+.filter-panel { padding: 26px; border-radius: 20px; box-shadow: 0 5px 20px #20262303; }
+.filter-head { align-items: center; margin-bottom: 24px; }
+.filter-heading { display: flex; align-items: center; gap: 12px; }
+.filter-heading p { color: var(--muted); font-size: 11px; margin-top: 5px; line-height: 1.8; }
+.filter-symbol { display: grid; place-items: center; width: 42px; height: 42px; background: #f5f5ee; border-radius: 12px; }
+.filter-symbol svg { width: 23px; height: 23px; }
+.filter-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.filter-field { gap: 9px; }
+.filter-field > span { display: flex; gap: 7px; align-items: center; color: #444a43; font-size: 12px; }
+.field-step { display: grid; place-items: center; width: 21px; height: 21px; border: 1px solid var(--border); border-radius: 6px; color: #73786d; font-size: 10px; font-weight: 500; }
+.filter-field em { color: var(--muted); font-size: 10px; font-style: normal; font-weight: 400; }
+.filter-field select, .filter-field input { min-height: 50px; border-color: var(--border); background: #fdfdfb; border-radius: 10px; }
+.filter-field select:disabled { background: #f6f6f2; color: #74796f; }
+.filter-grid > .filter-field:nth-child(4) { grid-column: 1; padding-top: 18px; border-top: 1px solid #efefe8; }
+.filter-search { grid-column: 2 / 4; padding-top: 18px; border-top: 1px solid #efefe8; }
+.filter-submit { min-height: 50px; background: var(--ink); }
+.vehicle-context { grid-column: 1 / -1; display: flex; gap: 8px; align-items: center; padding-top: 3px; font-size: 11px; color: #4d5d48; }
+.vehicle-context strong { font-weight: 500; }
+.vehicle-context small { margin-inline-start: auto; color: var(--muted); font-size: 10px; }
+.context-dot { width: 6px; height: 6px; border-radius: 50%; background: #789268; }
+.results-bar { margin-block: 34px 20px; }
+.results-summary > strong { font-size: 15px; }
+.product-grid { gap: 20px; }
+.product-card { border-radius: 15px; border-color: var(--border); }
+.product-media { height: 210px; margin: 8px 8px 0; border-radius: 9px; background: #f5f5f0; }
+.product-media img { width: 82%; height: 78%; }
+.product-fallback { background: #ebede4; color: #8a9280; }
+.product-fallback svg { width: 45px; height: 45px; }
+.stock-badge { box-shadow: none; border: 1px solid #e6ebdf; font-weight: 500; }
+.product-body { padding: 18px; }
+.product-name { min-height: 50px; font-size: 14px; font-weight: 600; }
+.product-meta { color: #74796f; font-size: 11px; }
+.product-foot { margin-top: 18px; border-top: 1px solid #f0f0ea; }
+.product-foot strong { font-size: 12px; }
+.product-add { min-height: 38px; background: #faf0e9; color: #b6411e; border-color: #f1dfd2; font-weight: 500; }
+.product-add:hover:not(:disabled) { background: #df592e; border-color: #df592e; }
+.product-skeleton { height: 345px; }
+.product-skeleton span:nth-child(1) { height: 210px; }
+@media (max-width: 900px) {
+  .filter-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .filter-search { grid-column: 2 / 4; }
+  .product-grid { gap: 14px; }
+  .product-media { height: 175px; }
+}
+@media (max-width: 640px) {
+  .store-head .shell { padding-block: 20px 24px; }
+  .store-breadcrumb { margin-bottom: 22px; }
+  .store-title-row { align-items: flex-start; gap: 18px; }
+  .store-title { font-size: 28px; letter-spacing: -.9px; }
+  .store-title span { display: block; }
+  .store-back { min-height: 44px; padding: 8px 12px; }
+  .filter-panel { padding: 18px; }
+  .filter-heading { gap: 9px; }
+  .filter-heading p { font-size: 10px; }
+  .filter-head { margin-bottom: 20px; }
+  .filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 12px; }
+  .filter-grid > .filter-field:nth-child(3) { grid-column: 1 / -1; }
+  .filter-grid > .filter-field:nth-child(4) { grid-column: 1 / -1; }
+  .filter-search { grid-column: 1 / -1; padding-top: 0; border: 0; }
+  .filter-field small { display: block; }
+  .filter-submit { padding-inline: 18px; }
+  .vehicle-context { flex-wrap: wrap; line-height: 1.8; }
+  .vehicle-context small { width: 100%; margin-inline-start: 14px; }
+  .results-bar { margin-top: 24px; }
+  .product-grid { gap: 10px; }
+  .product-media { height: 140px; margin: 5px 5px 0; }
+  .product-body { padding: 12px; }
+  .product-name { font-size: 12px; min-height: 46px; }
+  .product-meta { font-size: 10px; }
+  .product-foot { margin-top: 12px; gap: 9px; }
+  .product-foot strong { font-size: 11px; }
+  .product-add { width: 100%; justify-content: center; }
+  .stock-badge { inset-block-start: 8px; inset-inline-end: 7px; font-size: 9px; padding: 2px 6px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .product-card, .product-media img, .product-skeleton span { transition: none; animation: none; }

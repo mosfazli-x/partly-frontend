@@ -3,6 +3,7 @@ import { _replaceAppConfig } from '#app/config'
 import { defuFn } from 'defu'
 
 const inlineConfig = {
+  "enable3dGarage": false,
   "nuxt": {}
 }
 

@@ -4,224 +4,689 @@ useHead({
   meta: [{ name: 'description', content: 'نوع وسیله نقلیه خود را انتخاب کنید و قطعات و لوازم یدکی مورد نیاز خودرو یا موتورسیکلت خود را در پارتلی پیدا کنید.' }],
 })
 
-// Locally served Unsplash photography: photo-1492144534655-ae79c964c9d7
-// and photo-1568772585407-9361f9bf3a87. Mobile sources avoid oversized downloads.
-const categories = [
+// Locally served photography. Small variants keep mobile downloads light.
+const car = {
+  image: '/welcome-car.jpg',
+  smallImage: '/welcome-car-small.jpg',
+  alt: 'نمای سه‌ربع جلوی خودروی شورولت نقره‌ای در نمایشگاه با نورپردازی کنترل‌شده',
+}
+
+const motorcycle = {
+  image: '/welcome-motorcycle.jpg',
+  smallImage: '/welcome-motorcycle-small.jpg',
+  alt: 'نمای سه‌ربع جلوی موتورسیکلت اسپرت دوکاتی قرمز در محیط معماری تاریک',
+}
+
+const steps = [
   {
-    type: 'car',
     number: '۰۱',
-    label: 'خودرو',
-    title: 'لوازم یدکی خودرو',
-    description: 'انواع قطعات و لوازم مورد نیاز خودروی شما',
-    action: 'ورود به فروشگاه خودرو',
-    image: '/welcome-car.jpg',
-    smallImage: '/welcome-car-small.jpg',
-    alt: 'نمای سه‌ربع جلوی خودروی شورولت نقره‌ای در نمایشگاه با نورپردازی کنترل‌شده',
-    to: '/brands',
+    title: 'انتخاب وسیله نقلیه',
+    text: 'خودرو یا موتورسیکلت را انتخاب کنید تا فهرست برندها و قطعات مرتبط را ببینید.',
   },
   {
-    type: 'motorcycle',
     number: '۰۲',
-    label: 'موتورسیکلت',
-    title: 'لوازم یدکی موتورسیکلت',
-    description: 'قطعات و لوازم مورد نیاز انواع موتورسیکلت',
-    action: 'ورود به فروشگاه موتورسیکلت',
-    image: '/welcome-motorcycle.jpg',
-    smallImage: '/welcome-motorcycle-small.jpg',
-    alt: 'نمای سه‌ربع جلوی موتورسیکلت اسپرت دوکاتی قرمز در محیط معماری تاریک',
-    to: '/catalog?type=motorcycle',
+    title: 'انتخاب برند و قطعه',
+    text: 'قطعه مناسب مدل خودروی خود را با مشخصات کامل و امکان بررسی سازگاری پیدا کنید.',
+  },
+  {
+    number: '۰۳',
+    title: 'ثبت سفارش و تحویل',
+    text: 'سفارش را ثبت کنید و قطعه را در محل تحویل بگیرید.',
   },
 ]
 </script>
 
 <template>
-  <div class="welcome" dir="rtl">
-    <a class="skip-link" href="#main-content">رفتن به محتوای اصلی</a>
+  <div class="welcome" dir="rtl" lang="fa">
+    <div class="welcome-main">
+      <section class="intro" aria-labelledby="welcome-title">
+        <div class="intro-lead">
+          <p class="step-eyebrow">
+            <span class="step-pill">گام ۱ از ۳</span>
+            <span class="step-rule" aria-hidden="true"></span>
+            <span class="step-label">انتخاب وسیله نقلیه</span>
+          </p>
+          <h1 id="welcome-title" class="intro-title">
+            امروز دنبال
+            <span class="title-accent">چه قطعه‌ای</span>
+            هستید؟
+          </h1>
+        </div>
 
-    <header class="welcome-header">
-      <NuxtLink to="/" class="welcome-brand" aria-label="پارتلی، صفحه اصلی">
-        <span class="welcome-mark" aria-hidden="true">
-          <svg viewBox="0 0 32 32" fill="none"><path d="M9 24V8h8a6 6 0 0 1 0 12h-3" stroke="currentColor" stroke-width="3.5" stroke-linecap="square"/><path d="M14 13h4" stroke="currentColor" stroke-width="3"/></svg>
-        </span>
-        <span>پارتلی<span class="brand-period">.</span></span>
-      </NuxtLink>
-      <span class="header-note">برای مسیرهای پیش رو</span>
-      <NuxtLink to="/support" class="help-link">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 14v-3a8 8 0 0 1 16 0v3M4 12H3v6h4v-6H4Zm16 0h1v6h-4v-6h3ZM20 18c0 3-3 3-6 3"/><path d="M11 21h3" stroke-linecap="round"/></svg>
-        <span>راهنما و پشتیبانی</span>
-      </NuxtLink>
-    </header>
+        <div class="intro-aside">
+          <p class="intro-text">
+            نوع وسیله نقلیه خود را انتخاب کنید تا قطعات سازگار، برندهای معتبر و مشخصات کامل را در یک مسیر روشن ببینید.
+          </p>
+          <p class="intro-help">
+            سؤالی دارید؟
+            <NuxtLink to="/support">راهنمای خرید</NuxtLink>
+            <span class="help-sep" aria-hidden="true">·</span>
+            <NuxtLink to="/contact">تماس با پشتیبانی</NuxtLink>
+          </p>
+        </div>
+      </section>
 
-    <main id="main-content" class="welcome-main">
-      <div class="intro">
-        <p class="intro-label"><span aria-hidden="true"></span> قطعه درست، برای مسیر شما</p>
-        <h1>امروز دنبال چه قطعه‌ای هستید؟</h1>
-        <p class="intro-description">نوع وسیله نقلیه خود را انتخاب کنید و قطعات مورد نیازتان را پیدا کنید.</p>
-      </div>
+      <section class="vehicle-section" aria-labelledby="vehicle-title">
+        <h2 id="vehicle-title" class="visually-hidden">انتخاب نوع وسیله نقلیه</h2>
 
-      <div class="vehicle-choices" aria-label="انتخاب نوع وسیله نقلیه">
-        <NuxtLink
-          v-for="(category, index) in categories"
-          :key="category.type"
-          :to="category.to"
-          class="vehicle-choice"
-          :class="`choice-${category.type}`"
-          :aria-labelledby="`title-${category.type} action-${category.type}`"
-        >
-          <div class="choice-photo">
-            <img
-              :src="category.image"
-              :srcset="`${category.smallImage} 720w, ${category.image} 1440w`"
-              sizes="(max-width: 699px) calc(100vw - 40px), (max-width: 1279px) calc((100vw - 104px) / 2), 580px"
-              :alt="category.alt"
-              width="1440"
-              :height="category.type === 'car' ? 851 : 960"
-              :fetchpriority="index === 0 ? 'high' : 'auto'"
-              decoding="async"
-            >
-            <span class="photo-label"><span>{{ category.number }}</span><span class="label-divider" aria-hidden="true">/</span>{{ category.label }}</span>
-            <span class="photo-corner" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M17 7H7v10M7 7l10 10"/></svg></span>
-          </div>
-          <div class="choice-content">
-            <h2 :id="`title-${category.type}`">{{ category.title }}</h2>
-            <p>{{ category.description }}</p>
-            <div class="choice-bottom">
-              <span :id="`action-${category.type}`">{{ category.action }}</span>
-              <span class="choice-arrow" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M19 12H5m6-6-6 6 6 6"/></svg>
+        <div class="vehicle-grid">
+          <NuxtLink to="/brands" class="vehicle-card is-car">
+            <div class="card-media">
+              <img
+                :src="car.image"
+                :srcset="`${car.smallImage} 720w, ${car.image} 1440w`"
+                sizes="(max-width: 860px) calc(100vw - 40px), (max-width: 1240px) 56vw, 660px"
+                :alt="car.alt"
+                width="1440"
+                height="851"
+                fetchpriority="high"
+                decoding="async"
+              >
+              <span class="card-meta">
+                <span class="card-index" aria-hidden="true">۰۱</span>
+                <span class="card-kind">خودرو</span>
               </span>
             </div>
-          </div>
-        </NuxtLink>
-      </div>
+            <div class="card-body">
+              <h3 class="card-title">لوازم یدکی خودرو</h3>
+              <p class="card-text">
+                قطعات و لوازم مصرفی برای برندها و مدل‌های مختلف خودرو، با مشخصات کامل و امکان بررسی سازگاری.
+              </p>
+              <span class="card-action">
+                <span class="action-label">ورود به فروشگاه خودرو</span>
+                <span class="action-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M19 12H5m6-6-6 6 6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+              </span>
+            </div>
+          </NuxtLink>
 
-      <p class="selection-note">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m12 3 7 3v6c0 4-7 8-7 8s-7-4-7-8V6l7-3Z"/><path d="m9 11 2 2 4-4"/></svg>
-        انتخاب دقیق‌تر<span class="note-dot" aria-hidden="true">·</span>خرید مطمئن‌تر
-      </p>
-    </main>
+          <button
+            type="button"
+            class="vehicle-card is-motorcycle"
+            disabled
+            aria-disabled="true"
+            aria-describedby="motorcycle-note"
+          >
+            <div class="card-media">
+              <img
+                :src="motorcycle.image"
+                :srcset="`${motorcycle.smallImage} 720w, ${motorcycle.image} 1440w`"
+                sizes="(max-width: 860px) calc(100vw - 40px), (max-width: 1240px) 40vw, 480px"
+                :alt="motorcycle.alt"
+                width="1440"
+                height="960"
+                loading="lazy"
+                decoding="async"
+              >
+              <span class="card-meta">
+                <span class="card-index" aria-hidden="true">۰۲</span>
+                <span class="card-kind">موتورسیکلت</span>
+              </span>
+              <span class="soon-badge">به‌زودی</span>
+            </div>
+            <div class="card-body">
+              <h3 class="card-title">لوازم یدکی موتورسیکلت</h3>
+              <p id="motorcycle-note" class="card-text">
+                این بخش در حال آماده‌سازی است و به‌زودی در دسترس قرار می‌گیرد.
+              </p>
+              <span class="card-action">
+                <span class="action-label">در حال آماده‌سازی</span>
+                <span class="action-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+              </span>
+            </div>
+          </button>
+        </div>
+      </section>
 
-    <footer class="welcome-footer">
-      <div class="footer-identity"><span class="footer-brand">پارتلی<span>.</span></span><span class="footer-divider" aria-hidden="true"></span><span>همراهِ مسیر شما</span></div>
-      <p>تمامی حقوق برای پارتلی محفوظ است.</p>
-      <NuxtLink to="/contact">ارتباط با ما <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M17 7H7v10M7 7l10 10"/></svg></NuxtLink>
-    </footer>
+      <section class="steps" aria-labelledby="steps-title">
+        <div class="steps-head">
+          <h2 id="steps-title" class="steps-title">خرید در سه گام</h2>
+          <p class="steps-sub">از انتخاب وسیله نقلیه تا تحویل قطعه، مسیر کوتاه و روشن است.</p>
+        </div>
+        <ol class="steps-list">
+          <li v-for="step in steps" :key="step.number" class="step">
+            <span class="step-number" aria-hidden="true">{{ step.number }}</span>
+            <h3 class="step-title">{{ step.title }}</h3>
+            <p class="step-text">{{ step.text }}</p>
+          </li>
+        </ol>
+      </section>
+    </div>
   </div>
 </template>
 
 <style scoped>
 .welcome {
-  --accent: #e85d32;
-  --ink: #191b1d;
-  --muted: #686c6e;
-  --border: #e5e5e1;
+  --paper: #f8f7f4;
+  --card: #fffdf9;
+  --ink: #202623;
+  --muted: #6d736e;
+  --line: #e3e0d8;
+  --line-strong: #cfcbc0;
+  --accent: #df592e;
+  --accent-ink: #b8431f;
   --ease: cubic-bezier(.22, 1, .36, 1);
-  min-height: 100svh;
+  color: var(--ink);
+  background: var(--paper);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.welcome-main {
+  width: 100%;
+  max-width: 1200px;
+  margin-inline: auto;
+  padding-inline: clamp(20px, 4vw, 40px);
+  padding-block: clamp(40px, 6vw, 84px) clamp(56px, 7vw, 104px);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Intro */
+.intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+  align-items: end;
+  gap: clamp(24px, 4vw, 64px);
+  padding-bottom: clamp(28px, 3.4vw, 44px);
+  border-bottom: 1px solid var(--line);
+}
+
+.step-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 clamp(18px, 2vw, 26px);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.step-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding-inline: 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--accent-ink);
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.step-rule {
+  width: 26px;
+  height: 1px;
+  background: var(--line-strong);
+}
+
+.step-label {
+  font-size: 11px;
+  letter-spacing: 0;
+}
+
+.intro-title {
+  margin: 0;
+  font-size: clamp(2.05rem, 5.1vw, 3.9rem);
+  font-weight: 800;
+  line-height: 1.42;
+  text-wrap: balance;
+}
+
+.title-accent {
+  color: var(--accent);
+}
+
+.intro-aside {
+  padding-bottom: 6px;
+}
+
+.intro-text {
+  margin: 0;
+  max-width: 40ch;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 2.05;
+  text-wrap: pretty;
+}
+
+.intro-help {
+  margin: 18px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.intro-help a {
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: var(--line-strong);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 5px;
+  transition: color .25s, text-decoration-color .25s;
+}
+
+.help-sep {
+  padding-inline: 6px;
+  color: var(--line-strong);
+}
+
+/* Vehicle cards */
+.vehicle-section {
+  padding-top: clamp(28px, 3.4vw, 44px);
+}
+
+.vehicle-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.34fr) minmax(0, 1fr);
+  gap: clamp(16px, 1.8vw, 26px);
+  align-items: stretch;
+}
+
+.vehicle-card {
   display: flex;
   flex-direction: column;
-  padding-inline: max(40px, calc((100vw - 1320px) / 2));
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+  text-align: start;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--card);
+  color: inherit;
+  font: inherit;
+  box-shadow: 0 1px 2px rgba(32, 38, 35, .03), 0 14px 34px rgba(32, 38, 35, .035);
+  transition: transform .5s var(--ease), border-color .35s, box-shadow .5s var(--ease);
+}
+
+.is-car {
+  cursor: pointer;
+}
+
+.card-media {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: clamp(210px, 24vw, 320px);
+  overflow: hidden;
+  isolation: isolate;
+  background: #2a2f2c;
+}
+
+.card-media img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform .9s var(--ease), filter .5s;
+}
+
+.is-car .card-media img {
+  object-position: 62% 56%;
+}
+
+.is-motorcycle .card-media img {
+  object-position: 50% 53%;
+  filter: grayscale(1) contrast(.92) brightness(1.02);
+}
+
+.card-media::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(24, 29, 26, .5), rgba(24, 29, 26, 0) 46%);
+  pointer-events: none;
+}
+
+.is-motorcycle .card-media::after {
+  background: linear-gradient(to top, rgba(24, 29, 26, .34), rgba(24, 29, 26, 0) 42%);
+}
+
+.card-meta {
+  position: absolute;
+  inset-block-start: 18px;
+  inset-inline-start: 20px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, .45);
+}
+
+.card-index {
+  font-variant-numeric: tabular-nums;
+  opacity: .8;
+}
+
+.card-kind {
+  padding-inline-start: 9px;
+  border-inline-start: 1px solid rgba(255, 255, 255, .45);
+}
+
+.soon-badge {
+  position: absolute;
+  inset-block-start: 16px;
+  inset-inline-end: 18px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding-inline: 12px;
+  border: 1px solid rgba(255, 255, 255, .5);
+  border-radius: 999px;
+  background: rgba(248, 247, 244, .94);
   color: var(--ink);
-  background: #f5f5f2;
-  -webkit-font-smoothing: antialiased;
+  font-size: 11px;
+  font-weight: 700;
 }
-.welcome-header { min-height: 88px; display: flex; align-items: center; justify-content: space-between; gap: 24px; border-bottom: 1px solid var(--border); position: relative; }
-.welcome-brand { display: inline-flex; align-items: center; gap: 11px; font-size: 28px; font-weight: 900; letter-spacing: -1.4px; }
-.welcome-mark { width: 39px; height: 39px; display: grid; place-items: center; border-radius: 12px; background: var(--ink); color: #fff; }
-.welcome-mark svg { width: 30px; height: 30px; }
-.brand-period { color: var(--accent); margin-inline-start: 2px; }
-.header-note { position: absolute; inset-inline-start: 50%; transform: translateX(50%); font-size: 11px; color: var(--muted); }
-.help-link { display: inline-flex; align-items: center; gap: 9px; min-height: 44px; font-size: 12px; color: #505457; transition: color .25s; }
-.help-link svg { width: 18px; height: 18px; }
-.help-link:hover, .welcome-footer a:hover { color: #b73c16; }
-.welcome-main { width: 100%; max-width: 1184px; margin: auto; padding-block: 32px 24px; }
-.intro { text-align: center; margin-bottom: 28px; }
-.intro-label { display: inline-flex; align-items: center; gap: 9px; color: #a94020; font-size: 11px; font-weight: 500; }
-.intro-label > span { width: 18px; height: 2px; background: var(--accent); }
-.intro h1 { margin: 13px 0 12px; font-size: clamp(30px, 3.3vw, 44px); font-weight: 800; line-height: 1.5; letter-spacing: -1.7px; text-wrap: balance; }
-.intro-description { color: var(--muted); font-size: 13px; line-height: 2; }
-.vehicle-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
-.vehicle-choice { min-width: 0; display: block; overflow: hidden; border: 1px solid var(--border); border-radius: 22px; background: #fff; box-shadow: 0 3px 5px #191b1d02, 0 10px 30px #191b1d03; transition: border-color .35s, transform .45s var(--ease), box-shadow .45s var(--ease); }
-.choice-photo { height: clamp(230px, 20vw, 280px); position: relative; overflow: hidden; isolation: isolate; background: #242729; }
-.choice-photo img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .85s var(--ease); }
-.choice-car img { object-position: 62% 56%; }
-.choice-motorcycle img { object-position: 50% 53%; }
-.photo-label { position: absolute; inset-block-start: 22px; inset-inline-start: 25px; display: inline-flex; align-items: center; gap: 10px; color: #fff; font-size: 11px; font-weight: 500; text-shadow: 0 1px 5px #000; }
-.photo-label > span:first-child { font-size: 12px; font-variant-numeric: tabular-nums; }
-.label-divider { opacity: .6; }
-.photo-corner { position: absolute; inset-block-start: 22px; inset-inline-end: 24px; width: 24px; height: 24px; color: #fff; opacity: .75; transition: opacity .3s, transform .4s var(--ease); }
-.photo-corner svg { width: 100%; height: 100%; }
-.choice-content { padding: 23px 29px 14px; }
-.choice-content h2 { font-size: clamp(22px, 2vw, 28px); font-weight: 800; line-height: 1.6; letter-spacing: -.9px; }
-.choice-content > p { margin-top: 5px; color: var(--muted); font-size: 13px; line-height: 1.9; }
-.choice-bottom { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 58px; margin-top: 19px; padding-top: 12px; border-top: 1px solid #eeefeb; font-size: 13px; font-weight: 600; transition: color .3s; }
-.choice-arrow { width: 38px; height: 38px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 50%; background: #f2f2ee; color: #424749; transition: background .3s, color .3s; }
-.choice-arrow svg { width: 20px; height: 20px; transition: transform .4s var(--ease); }
-.vehicle-choice:focus-visible { outline: 3px solid #b73c16; outline-offset: 5px; }
-.welcome a:not(.vehicle-choice):focus-visible { outline: 3px solid #b73c16; outline-offset: 5px; border-radius: 4px; }
-.selection-note { display: flex; align-items: center; justify-content: center; gap: 7px; margin-top: 25px; color: var(--muted); font-size: 10px; line-height: 1.8; }
-.selection-note svg { width: 16px; height: 16px; margin-inline-end: 2px; }
-.note-dot { padding-inline: 3px; }
-.welcome-footer { min-height: 74px; display: flex; align-items: center; justify-content: space-between; gap: 20px; border-top: 1px solid var(--border); font-size: 10px; color: var(--muted); }
-.footer-identity { display: flex; align-items: center; gap: 14px; }
-.footer-brand { color: #45494b; font-size: 17px; font-weight: 800; letter-spacing: -.8px; }
-.footer-brand > span { color: var(--accent); }
-.footer-divider { height: 13px; width: 1px; background: #d7d9d4; }
-.welcome-footer > a { min-height: 44px; display: inline-flex; align-items: center; gap: 9px; color: #505457; transition: color .25s; }
-.welcome-footer > a svg { width: 15px; height: 15px; }
-.skip-link { position: absolute; inset-block-start: -100px; inset-inline-start: 24px; z-index: 50; padding: 12px 20px; background: #fff; color: var(--ink); }
-.skip-link:focus { inset-block-start: 12px; }
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+  padding: clamp(20px, 2.1vw, 28px) clamp(20px, 2.2vw, 30px) clamp(16px, 1.6vw, 20px);
+}
+
+.card-title {
+  margin: 0;
+  font-size: clamp(1.2rem, 1.7vw, 1.55rem);
+  font-weight: 800;
+  line-height: 1.6;
+}
+
+.card-text {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.95;
+  text-wrap: pretty;
+}
+
+.card-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: clamp(18px, 2vw, 26px);
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  font-size: 12.5px;
+  font-weight: 700;
+  transition: color .3s;
+}
+
+.action-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  color: var(--ink);
+  transition: background .3s, border-color .3s, color .3s;
+}
+
+.action-icon svg {
+  width: 18px;
+  height: 18px;
+  transition: transform .45s var(--ease);
+}
+
+/* Disabled motorcycle card */
+.is-motorcycle {
+  cursor: not-allowed;
+  border-color: #e6e2d9;
+  background: #f3f1ea;
+  box-shadow: none;
+}
+
+.is-motorcycle .card-title {
+  color: #4a504b;
+}
+
+.is-motorcycle .card-text {
+  color: #7c817b;
+}
+
+.is-motorcycle .card-action {
+  color: #7c817b;
+  border-top-color: #e2ded4;
+}
+
+.is-motorcycle .action-icon {
+  border-color: #dcd7cc;
+  color: #8a8f88;
+}
+
+/* Focus */
+.vehicle-card:focus-visible,
+.intro-help a:focus-visible {
+  outline: 3px solid var(--accent-ink);
+  outline-offset: 4px;
+  border-radius: 6px;
+}
+
+.vehicle-card:focus-visible {
+  border-radius: 20px;
+}
+
+/* Steps */
+.steps {
+  margin-top: clamp(48px, 6vw, 88px);
+  padding-top: clamp(28px, 3.2vw, 40px);
+  border-top: 1px solid var(--line);
+}
+
+.steps-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 24px;
+  margin-bottom: clamp(22px, 2.6vw, 34px);
+}
+
+.steps-title {
+  margin: 0;
+  font-size: clamp(1.05rem, 1.5vw, 1.3rem);
+  font-weight: 800;
+}
+
+.steps-sub {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.9;
+}
+
+.steps-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(18px, 2.4vw, 36px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.step-number {
+  display: block;
+  color: var(--accent-ink);
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.step-title {
+  margin: 10px 0 0;
+  font-size: 13.5px;
+  font-weight: 700;
+  line-height: 1.7;
+}
+
+.step-text {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.95;
+  text-wrap: pretty;
+}
+
+/* Hover */
 @media (hover: hover) and (pointer: fine) {
-  .vehicle-choice:hover { transform: translateY(-5px); border-color: #c9cbc4; box-shadow: 0 14px 40px #191b1d0c; }
-  .vehicle-choice:hover img { transform: scale(1.04); }
-  .vehicle-choice:hover .choice-bottom { color: #b73c16; }
-  .vehicle-choice:hover .choice-arrow { background: var(--accent); color: var(--ink); }
-  .vehicle-choice:hover .choice-arrow svg { transform: translateX(-3px); }
-  .vehicle-choice:hover .photo-corner { opacity: 1; transform: translate(-2px, -2px); }
+  .is-car:hover {
+    transform: translateY(-4px);
+    border-color: var(--line-strong);
+    box-shadow: 0 2px 4px rgba(32, 38, 35, .04), 0 22px 48px rgba(32, 38, 35, .08);
+  }
+
+  .is-car:hover .card-media img {
+    transform: scale(1.035);
+  }
+
+  .is-car:hover .card-action {
+    color: var(--accent-ink);
+  }
+
+  .is-car:hover .action-icon {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .is-car:hover .action-icon svg {
+    transform: translateX(-3px);
+  }
+
+  .intro-help a:hover {
+    color: var(--accent-ink);
+    text-decoration-color: var(--accent);
+  }
 }
-@media (min-width: 1600px) { .welcome-main { padding-block: 54px 34px; } .intro { margin-bottom: 40px; } }
-@media (min-width: 700px) and (max-height: 800px) { .welcome-header { min-height: 76px; } .welcome-main { padding-block: 28px 22px; } .intro { margin-bottom: 25px; } .choice-photo { height: clamp(210px, 19vw, 260px); } .selection-note { margin-top: 19px; } .welcome-footer { min-height: 64px; } }
-@media (min-width: 700px) and (max-width: 900px) {
-  .welcome { padding-inline: 28px; }
-  .vehicle-choices { gap: 18px; }
-  .choice-content { padding: 22px 21px 14px; }
-  .choice-content h2 { font-size: 22px; }
-  .choice-content > p { font-size: 11px; }
-  .choice-bottom { font-size: 11px; }
-  .photo-label { inset-inline-start: 21px; }
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .intro {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 20px;
+  }
+
+  .intro-text {
+    max-width: 56ch;
+  }
 }
-@media (max-width: 699px) {
-  .welcome { padding-inline: 20px; }
-  .welcome-header { min-height: 76px; gap: 16px; }
-  .welcome-brand { font-size: 25px; gap: 8px; }
-  .welcome-mark { width: 34px; height: 34px; border-radius: 10px; }
-  .welcome-mark svg { width: 27px; height: 27px; }
-  .header-note { display: none; }
-  .help-link { font-size: 10px; gap: 7px; }
-  .help-link svg { width: 16px; height: 16px; }
-  .welcome-main { padding-block: 32px 26px; }
-  .intro { margin-bottom: 27px; }
-  .intro-label { font-size: 10px; }
-  .intro h1 { max-width: 340px; margin: 13px auto 10px; font-size: clamp(27px, 7.4vw, 37px); line-height: 1.65; letter-spacing: -1.1px; }
-  .intro-description { max-width: 290px; margin-inline: auto; font-size: 11px; line-height: 2.1; text-wrap: pretty; }
-  .vehicle-choices { grid-template-columns: 1fr; gap: 22px; }
-  .vehicle-choice { border-radius: 20px; }
-  .choice-photo { height: auto; aspect-ratio: 1.5; }
-  .photo-label { inset-block-start: 18px; inset-inline-start: 20px; font-size: 10px; }
-  .photo-corner { inset-block-start: 17px; inset-inline-end: 18px; width: 22px; height: 22px; }
-  .choice-content { padding: 20px 21px 13px; }
-  .choice-content h2 { font-size: 24px; }
-  .choice-content > p { font-size: 12px; }
-  .choice-bottom { min-height: 59px; margin-top: 18px; font-size: 12px; }
-  .choice-arrow { width: 36px; height: 36px; }
-  .selection-note { margin-top: 23px; }
-  .welcome-footer { min-height: 100px; display: grid; grid-template-columns: 1fr auto; align-content: center; gap: 2px 12px; padding-block: 13px; }
-  .footer-identity { gap: 10px; }
-  .footer-identity > span:last-child { font-size: 9px; }
-  .welcome-footer > p { grid-column: 1; grid-row: 2; font-size: 9px; }
-  .welcome-footer > a { grid-column: 2; grid-row: 1 / 3; font-size: 10px; }
+
+@media (max-width: 860px) {
+  .vehicle-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+  }
+
+  .card-media {
+    flex: 0 0 auto;
+    min-height: 0;
+    aspect-ratio: 1.5;
+  }
+
+  .is-car .card-media {
+    aspect-ratio: 1.42;
+  }
+
+  .steps-list {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+
+  .step {
+    padding-block: 16px;
+  }
+
+  .step:first-child {
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .step:last-child {
+    padding-bottom: 0;
+  }
 }
+
+@media (max-width: 480px) {
+  .welcome-main {
+    padding-inline: 18px;
+  }
+
+  .intro-title {
+    font-size: clamp(1.85rem, 8.4vw, 2.4rem);
+    line-height: 1.5;
+  }
+
+  .step-eyebrow {
+    gap: 9px;
+    font-size: 11px;
+  }
+
+  .step-rule {
+    width: 16px;
+  }
+
+  .card-meta {
+    inset-block-start: 15px;
+    inset-inline-start: 16px;
+  }
+
+  .soon-badge {
+    inset-block-start: 13px;
+    inset-inline-end: 14px;
+  }
+
+  .card-body {
+    padding: 18px 18px 14px;
+  }
+
+  .card-action {
+    margin-top: 16px;
+    padding-top: 14px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .welcome *, .welcome *::before, .welcome *::after { transition: none !important; }
-  .vehicle-choice:hover, .vehicle-choice:hover img, .vehicle-choice:hover .choice-arrow svg, .vehicle-choice:hover .photo-corner { transform: none; }
+  .welcome *,
+  .welcome *::before,
+  .welcome *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  .is-car:hover,
+  .is-car:hover .card-media img,
+  .is-car:hover .action-icon svg {
+    transform: none;
+  }
 }
 </style>

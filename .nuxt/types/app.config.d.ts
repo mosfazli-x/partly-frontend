@@ -4,6 +4,7 @@ import type { Defu } from 'defu'
 
 
 declare const inlineConfig = {
+  "enable3dGarage": false,
   "nuxt": {}
 }
 type ResolvedAppConfig = Defu<typeof inlineConfig, []>

@@ -31,5 +31,7 @@ export { setInterval } from '#app/compat/interval';
 export { definePageMeta } from '../node_modules/nuxt/dist/pages/runtime/composables';
 export { defineLazyHydrationComponent } from '#app/composables/lazy-hydration';
 export { useCatalog, Variant, Make, Category, Product } from '../composables/useCatalog';
+export { useGarageEnabled } from '../composables/useGarageEnabled';
 export { useMarketplace } from '../composables/useMarketplace';
+export { brandGroups, carBrands, getCarBrand, brandMakeSlugs, getBrandMakeSlugs, isBrandAvailable, getBrandInitials, BrandGroup, CarBrand } from '../utils/carBrands';
 export { getShowroomVehicles, getShowroomModelAsset, getVehicleModelAsset, VehicleModelAsset, ShowroomVehicle } from '../utils/vehicleModels';

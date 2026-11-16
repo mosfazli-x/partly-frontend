@@ -583,6 +583,7 @@ function cloneWithProxy(obj, overrides) {
 const cachedEventHandler = defineCachedEventHandler;
 
 const inlineAppConfig = {
+  "enable3dGarage": false,
   "nuxt": {}
 };
 
