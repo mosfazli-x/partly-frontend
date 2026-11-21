@@ -41,6 +41,7 @@ async function submit() {
         </NuxtLink>
         <nav class="desktop-nav" aria-label="منوی اصلی">
           <NuxtLink to="/brands" class="nav-link">خرید قطعات</NuxtLink>
+          <NuxtLink to="/deals" class="nav-link">فروش ویژه</NuxtLink>
           <NuxtLink to="/support" class="nav-link">راهنمای خرید</NuxtLink>
           <NuxtLink to="/contact" class="nav-link">تماس با ما</NuxtLink>
         </nav>
@@ -63,6 +64,7 @@ async function submit() {
       </div>
       <nav v-show="menu" id="mobile-nav" class="mobile-nav shell" aria-label="منوی موبایل">
         <NuxtLink to="/brands">خرید قطعات</NuxtLink>
+        <NuxtLink to="/deals">فروش ویژه</NuxtLink>
         <NuxtLink :to="accountPath">{{ user ? 'حساب کاربری' : 'ورود و ثبت‌نام' }}</NuxtLink>
         <NuxtLink to="/support">راهنمای خرید</NuxtLink>
         <NuxtLink to="/contact">تماس با ما</NuxtLink>
@@ -85,6 +87,7 @@ async function submit() {
           <h2 class="footer-title">فروشگاه</h2>
           <div class="footer-links">
             <NuxtLink to="/brands">خرید قطعات</NuxtLink>
+            <NuxtLink to="/deals">فروش ویژه</NuxtLink>
             <NuxtLink to="/cart">سبد خرید</NuxtLink>
             <NuxtLink :to="accountPath">حساب کاربری و سفارش‌ها</NuxtLink>
           </div>

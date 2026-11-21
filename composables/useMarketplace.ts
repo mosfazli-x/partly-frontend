@@ -15,8 +15,8 @@ export const useMarketplace = () => {
   async function logout() { try { await api('/api/auth/logout', { method: 'POST' }) } finally { token.value = null; user.value = null; await navigateTo('/') } }
   function saveCart() { if (import.meta.client) localStorage.setItem('partly-cart', JSON.stringify(cart.value)) }
   function loadCart() { if (import.meta.client) { try { const saved = JSON.parse(localStorage.getItem('partly-cart') || '[]'); cart.value = Array.isArray(saved) ? saved.filter(i => i?.id && Number.isInteger(i.quantity) && i.quantity > 0) : [] } catch { cart.value = [] } } }
-  function add(product: any) { if (!product.stock) return; const item = cart.value.find(i => i.id === product.id); if (item) item.quantity = Math.min(item.quantity + 1, product.stock); else cart.value.push({ id: product.id, name: product.name, slug: product.slug, price: product.price, stock: product.stock, quantity: 1 }); saveCart() }
-  const money = (value: any) => Number(value || 0).toLocaleString('fa-IR') + ' تومان'
+  function add(product: any) { if (!product.stock) return; const item = cart.value.find(i => i.id === product.id); if (item) item.quantity = Math.min(item.quantity + 1, product.stock); else cart.value.push({ id: product.id, name: product.name, slug: product.slug, price: product.price, stock: product.stock, packaging: product.packaging ?? null, quantity: 1 }); saveCart() }
+  const money = (value: any) => formatToman(value)
   const message = (e: any) => e?.data?.message || 'ارتباط با سرور برقرار نشد. دوباره تلاش کنید.'
   return { token, user, cart, api, restore, login, logout, loadCart, saveCart, add, money, message }
 }

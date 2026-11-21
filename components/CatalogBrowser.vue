@@ -1,13 +1,21 @@
 <script setup lang="ts">
-const { api, add, money, message } = useMarketplace()
+const { api, add, message } = useMarketplace()
 const route = useRoute(), router = useRouter()
 const props = withDefaults(defineProps<{ initialType?: 'CAR' | 'MOTORCYCLE'; showTypeToggle?: boolean }>(), { initialType: 'CAR', showTypeToggle: false })
 const products = ref<any[]>([]), categories = ref<any[]>([]), makes = ref<any[]>([])
 const vehicleType = ref<'CAR' | 'MOTORCYCLE'>(props.initialType)
-const makeId = ref(''), modelId = ref(''), variantId = ref(String(route.query.variant || '')), query = ref(String(route.query.q || '')), category = ref(String(route.query.category || '')), sort = ref('newest'), page = ref(1), total = ref(0), pages = ref(0), busy = ref(true), error = ref(''), notice = ref('')
-const selectedVehicle = ref<string | null>(null)
+const makeId = ref(''), modelId = ref(''), variantId = ref(String(route.query.variant || '')), query = ref(String(route.query.q || '')), category = ref(String(route.query.category || '')), sort = ref((['price-asc','price-desc','newest','best-selling','discount'].includes(String(route.query.sort || '')) ? String(route.query.sort) : 'newest')), page = ref(1), total = ref(0), pages = ref(0), busy = ref(true), error = ref(''), notice = ref('')
+const selectedVehicle = computed(() => {
+  if (!variantId.value) return null
+  for (const make of makes.value) for (const model of make.models || []) {
+    const variant = (model.variants || []).find((item: any) => item.id === variantId.value)
+    if (variant) return `${make.name} ${model.name} ${variant.name}`.trim()
+  }
+  return null
+})
 const models = computed(() => makes.value.find(m => m.id === makeId.value)?.models || [])
 const variants = computed(() => models.value.find((m: any) => m.id === modelId.value)?.variants || [])
+const categoryTree = computed(() => filterCategoryTreeByEquipment(categories.value, vehicleType.value))
 const isMoto = computed(() => vehicleType.value === 'MOTORCYCLE')
 const makeLabel = computed(() => (isMoto.value ? 'برند موتورسیکلت' : 'سازنده خودرو'))
 const modelLabel = computed(() => (isMoto.value ? 'مدل موتورسیکلت' : 'مدل خودرو'))
@@ -36,7 +44,6 @@ function selectVehicle(selection: { makeId: string; modelId: string; variantId: 
 }
 function clearVehicle() {
   makeId.value = ''; modelId.value = ''; variantId.value = ''
-  selectedVehicle.value = null
   load(true)
 }
 
@@ -48,21 +55,12 @@ async function load(reset = false) {
     const params = new URLSearchParams({ page: String(page.value), limit: '12', sort: sort.value })
     if (query.value.trim()) params.set('q', query.value.trim())
     if (category.value) params.set('category', category.value)
-    const result: any = await api(variantId.value ? `/api/catalog/${variantId.value}?${params}` : `/api/products?${params}`)
+    if (variantId.value) params.set('variantId', variantId.value)
+    const result: any = await api(`/api/products?${params}`)
     if (current !== request) return
-    let list = result.products || []
-    if (variantId.value) {
-      selectedVehicle.value = result.vehicle ? `${result.vehicle.model?.make?.name || ''} ${result.vehicle.model?.name || ''} ${result.vehicle.name || ''}`.trim() : null
-      if (sort.value !== 'newest') list.sort((a: any, b: any) => (Number(a.price) - Number(b.price)) * (sort.value === 'price-asc' ? 1 : -1))
-      total.value = list.length
-      pages.value = Math.ceil(list.length / 12)
-      list = list.slice((page.value - 1) * 12, page.value * 12)
-    } else {
-      selectedVehicle.value = null
-      total.value = result.total
-      pages.value = result.pages
-    }
-    products.value = list
+    products.value = result.products || []
+    total.value = result.total
+    pages.value = result.pages
   } catch (e) {
     if (current === request) { error.value = message(e); products.value = [] }
   } finally {
@@ -74,7 +72,7 @@ async function switchType(type: 'CAR' | 'MOTORCYCLE') {
   if (vehicleType.value === type) return
   vehicleType.value = type
   makeId.value = ''; modelId.value = ''; variantId.value = ''
-  selectedVehicle.value = null
+  if (category.value && !findCategoryNode(filterCategoryTreeByEquipment(categories.value, type), category.value)) category.value = ''
   await loadMakes()
   await load(true)
 }
@@ -155,21 +153,17 @@ watch(() => route.query.q, q => { query.value = String(q || ''); load(true) })
             <option v-for="v in variants" :key="v.id" :value="v.id">{{ v.name }}</option>
           </select>
         </label>
-        <label class="market-label">دسته‌بندی
-          <select v-model="category" class="market-input" @change="load(true)">
-            <option value="">همه دسته‌ها</option>
-            <template v-for="c in categories" :key="c.id">
-              <option :value="c.slug">{{ c.name }}</option>
-              <option v-for="child in c.children" :key="child.id" :value="child.slug">— {{ child.name }}</option>
-            </template>
-          </select>
-        </label>
+        <div class="market-label">دسته‌بندی
+          <CategoryPicker v-model="category" :categories="categoryTree" value-key="slug" placeholder="همه دسته‌ها" compact @change="load(true)" />
+        </div>
       </div>
       <div class="flex flex-wrap gap-3">
         <input v-model="query" aria-label="جستجوی نام قطعه یا کد کالا" placeholder="نام قطعه، برند یا کد فنی…" class="market-input min-w-0 flex-1">
         <button class="market-primary">جستجو</button>
         <select v-model="sort" aria-label="مرتب‌سازی" class="market-input sm:w-auto" @change="load(true)">
           <option value="newest">جدیدترین</option>
+          <option value="best-selling">پرفروش‌ترین</option>
+          <option value="discount">بیشترین تخفیف</option>
           <option value="price-asc">ارزان‌ترین</option>
           <option value="price-desc">گران‌ترین</option>
         </select>
@@ -200,20 +194,7 @@ watch(() => route.query.q, q => { query.value = String(q || ''); load(true) })
     <div v-if="notice" class="market-success" role="status">{{ notice }} <NuxtLink to="/cart" class="underline">مشاهده سبد</NuxtLink></div>
     <p v-if="busy" class="market-empty" role="status">در حال دریافت کالاها…</p>
     <div v-else-if="products.length" class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-      <article v-for="p in products" :key="p.id" class="product-card">
-        <NuxtLink :to="`/products/${p.slug}`" class="product-visual">
-          <img :src="p.image" :alt="p.name" loading="lazy" class="h-36 w-4/5 object-contain" @error="($event.target as HTMLImageElement).style.visibility='hidden'">
-          <span class="stock-label" :class="{ '!text-red-600': !p.stock }">{{ p.stock ? 'موجود' : 'ناموجود' }}</span>
-        </NuxtLink>
-        <div class="p-5">
-          <p class="mb-2 text-xs text-slate-400">{{ p.brand }} • {{ p.category?.name }}</p>
-          <NuxtLink :to="`/products/${p.slug}`" class="block min-h-12 text-sm font-bold leading-6">{{ p.name }}</NuxtLink>
-          <div class="mt-5 flex items-center justify-between gap-2">
-            <strong class="text-sm">{{ money(p.price) }}</strong>
-            <button class="market-secondary" :disabled="!p.stock" :aria-label="`افزودن ${p.name} به سبد`" @click="addItem(p)">+ سبد</button>
-          </div>
-        </div>
-      </article>
+      <ProductCard v-for="p in products" :key="p.id" :product="p" @add="addItem" />
     </div>
     <p v-else-if="!error && selectedVehicle" class="market-panel market-empty">هیچ قطعه‌ای برای {{ selectedVehicle }} ثبت نشده است.</p>
     <p v-else-if="!error" class="market-panel market-empty">کالایی با این فیلترها یافت نشد. جستجو یا {{ isMoto ? 'موتورسیکلت' : 'خودرو' }} دیگری را امتحان کنید.</p>

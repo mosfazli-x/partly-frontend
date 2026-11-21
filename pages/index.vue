@@ -1,4 +1,25 @@
 <script setup lang="ts">
+const { api, add } = useMarketplace()
+const { data: home } = await useAsyncData('home-merchandising', () => api('/api/home').catch(() => ({ deals: [], bestSellers: [], newest: [], brands: [], categories: [] })))
+const deals = computed(() => ((home.value as any)?.deals ?? []) as any[])
+const bestSellers = computed(() => ((home.value as any)?.bestSellers ?? []) as any[])
+const newest = computed(() => ((home.value as any)?.newest ?? []) as any[])
+const brands = computed(() => ((home.value as any)?.brands ?? []) as { name: string; count: number }[])
+const categories = computed(() => ((home.value as any)?.categories ?? []) as { id: string; name: string; slug: string; productCount?: number }[])
+const notice = ref('')
+function addItem(product: any) { add(product); notice.value = `${product.name} به سبد خرید اضافه شد.` }
+const rails = computed(() => [
+  { key: 'deals', eyebrow: 'تخفیف‌های فعال', title: 'فروش ویژه', to: '/deals', items: deals.value },
+  { key: 'best', eyebrow: 'انتخاب خریداران', title: 'پرفروش‌ترین‌ها', to: '/brands?sort=best-selling', items: bestSellers.value },
+  { key: 'new', eyebrow: 'تازه رسیده', title: 'جدیدترین قطعات', to: '/brands', items: newest.value },
+].filter(rail => rail.items.length))
+const trust = [
+  { title: 'ضمانت بازگشت', text: 'تا ۷ روز پس از خرید' },
+  { title: 'اصالت کالا', text: 'تضمین کیفیت و اصالت' },
+  { title: 'پشتیبانی', text: 'پاسخ‌گویی همه روزه' },
+  { title: 'ارسال سریع', text: 'ارسال به سراسر ایران' },
+]
+
 useHead({
   title: 'پارتلی | لوازم یدکی خودرو و موتورسیکلت',
   meta: [{ name: 'description', content: 'نوع وسیله نقلیه خود را انتخاب کنید و قطعات و لوازم یدکی مورد نیاز خودرو یا موتورسیکلت خود را در پارتلی پیدا کنید.' }],
@@ -153,6 +174,54 @@ const steps = [
             <p class="step-text">{{ step.text }}</p>
           </li>
         </ol>
+      </section>
+
+      <section class="trust-strip" aria-label="مزیت‌های خرید از پارتلی">
+        <div v-for="item in trust" :key="item.title" class="trust-item">
+          <span class="trust-mark" aria-hidden="true"></span>
+          <div><strong>{{ item.title }}</strong><p>{{ item.text }}</p></div>
+        </div>
+      </section>
+
+      <p v-if="notice" class="market-success home-notice" role="status">{{ notice }} <NuxtLink to="/cart" class="underline">مشاهده سبد</NuxtLink></p>
+
+      <section v-for="rail in rails" :key="rail.key" class="home-section" :aria-labelledby="`rail-${rail.key}`">
+        <div class="rail-head">
+          <div>
+            <p class="rail-eyebrow">{{ rail.eyebrow }}</p>
+            <h2 :id="`rail-${rail.key}`" class="rail-title">{{ rail.title }}</h2>
+          </div>
+          <NuxtLink :to="rail.to" class="rail-more">مشاهده همه</NuxtLink>
+        </div>
+        <div class="rail-grid">
+          <ProductCard v-for="product in rail.items" :key="product.id" :product="product" @add="addItem" />
+        </div>
+      </section>
+
+      <section v-if="categories.length" class="home-section" aria-labelledby="home-categories">
+        <div class="rail-head">
+          <div><p class="rail-eyebrow">مسیر خرید</p><h2 id="home-categories" class="rail-title">دسته‌بندی قطعات</h2></div>
+          <NuxtLink to="/brands" class="rail-more">همه دسته‌ها</NuxtLink>
+        </div>
+        <div class="tile-grid">
+          <NuxtLink v-for="category in categories" :key="category.id" :to="{ path: '/brands', query: { category: category.slug } }" class="category-tile">
+            <span class="tile-name">{{ category.name }}</span>
+            <span class="tile-count">{{ (category.productCount ?? 0).toLocaleString('fa-IR') }} کالا</span>
+          </NuxtLink>
+        </div>
+      </section>
+
+      <section v-if="brands.length" class="home-section" aria-labelledby="home-brands">
+        <div class="rail-head">
+          <div><p class="rail-eyebrow">برندهای معتبر</p><h2 id="home-brands" class="rail-title">خرید بر اساس برند</h2></div>
+          <NuxtLink to="/brands" class="rail-more">همه برندها</NuxtLink>
+        </div>
+        <div class="tile-grid brands">
+          <NuxtLink v-for="brand in brands" :key="brand.name" :to="{ path: '/brands', query: { q: brand.name } }" class="brand-tile">
+            <span class="tile-name">{{ brand.name }}</span>
+            <span class="tile-count">{{ brand.count.toLocaleString('fa-IR') }} کالا</span>
+          </NuxtLink>
+        </div>
       </section>
     </div>
   </div>
@@ -556,6 +625,136 @@ const steps = [
   text-wrap: pretty;
 }
 
+/* Commerce */
+.trust-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  margin-top: clamp(40px, 5vw, 64px);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.trust-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 16px 18px;
+  background: var(--card);
+}
+
+.trust-item strong {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.trust-item p {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.8;
+}
+
+.trust-mark {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.home-notice {
+  margin-top: 24px;
+}
+
+.home-section {
+  margin-top: clamp(44px, 5.5vw, 72px);
+}
+
+.rail-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px 24px;
+  margin-bottom: clamp(18px, 2.2vw, 26px);
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.rail-eyebrow {
+  margin: 0 0 4px;
+  color: var(--accent-ink);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.rail-title {
+  margin: 0;
+  font-size: clamp(1.1rem, 1.7vw, 1.4rem);
+  font-weight: 800;
+}
+
+.rail-more {
+  color: var(--muted);
+  font-size: 12px;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 5px;
+  transition: color .2s var(--ease);
+}
+
+.rail-more:hover {
+  color: var(--accent-ink);
+}
+
+.rail-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(14px, 1.6vw, 20px);
+}
+
+.tile-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.category-tile,
+.brand-tile {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+  min-height: 92px;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--card);
+  transition: border-color .2s var(--ease), transform .2s var(--ease);
+}
+
+.category-tile:hover,
+.brand-tile:hover {
+  border-color: var(--line-strong);
+  transform: translateY(-2px);
+}
+
+.tile-name {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.tile-count {
+  color: var(--muted);
+  font-size: 11px;
+}
+
 /* Hover */
 @media (hover: hover) and (pointer: fine) {
   .is-car:hover {
@@ -599,12 +798,28 @@ const steps = [
   .intro-text {
     max-width: 56ch;
   }
+
+  .rail-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .trust-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 860px) {
   .vehicle-grid {
     grid-template-columns: minmax(0, 1fr);
     gap: 18px;
+  }
+
+  .rail-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tile-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .card-media {
@@ -672,6 +887,11 @@ const steps = [
   .card-action {
     margin-top: 16px;
     padding-top: 14px;
+  }
+
+  .rail-grid,
+  .tile-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 

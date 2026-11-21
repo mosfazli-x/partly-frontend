@@ -29,7 +29,7 @@ useHead({title:'ثبت سفارش | پارتلی'})
       <aside class="market-panel summary" aria-labelledby="order-summary-title">
         <div class="summary-heading"><h2 id="order-summary-title">خلاصه سفارش</h2><NuxtLink to="/cart">ویرایش سبد</NuxtLink></div>
         <ul class="order-items"><li v-for="item in cart" :key="item.id"><div><span class="order-name">{{item.name}}</span><span class="quantity">تعداد: {{item.quantity.toLocaleString('fa-IR')}}</span></div><strong>{{money(Number(item.price)*item.quantity)}}</strong></li></ul>
-        <dl class="totals"><div class="subtotal"><dt>جمع کالاها</dt><dd>{{money(total)}}</dd></div><div><dt>هزینه ارسال</dt><dd>۰ تومان</dd></div></dl>
+        <dl class="totals"><div class="subtotal"><dt>جمع کالاها</dt><dd>{{money(total)}}</dd></div><div><dt>هزینه ارسال</dt><dd>۰ هزار تومان</dd></div></dl>
         <div class="payment-note"><h3>پرداخت در محل</h3><p>روش پرداخت این نسخه فقط پرداخت در محل است؛ هیچ پرداخت اینترنتی انجام نمی‌شود. قیمت روز کالاها هنگام ثبت سفارش توسط سرور محاسبه می‌شود.</p></div>
         <label class="confirmation"><input v-model="confirmed" type="checkbox" required><span>اطلاعات سفارش و <NuxtLink to="/returns">شرایط خرید و مرجوعی</NuxtLink> را بررسی کرده‌ام.</span></label>
         <div v-if="error" class="market-error" role="alert">{{error}}</div>

@@ -16,7 +16,12 @@ type LazyComponent<T> = DefineComponent<HydrationStrategies, {}, {}, {}, {}, {},
 
 export const BrandLogo: typeof import("../components/BrandLogo.vue")['default']
 export const CatalogBrowser: typeof import("../components/CatalogBrowser.vue")['default']
+export const CategoryPicker: typeof import("../components/CategoryPicker.vue")['default']
+export const CategoryTree: typeof import("../components/CategoryTree.vue")['default']
+export const ProductCard: typeof import("../components/ProductCard.vue")['default']
+export const SearchSelect: typeof import("../components/SearchSelect.vue")['default']
 export const VehicleBrandStrip: typeof import("../components/VehicleBrandStrip.vue")['default']
+export const VehicleFitmentPicker: typeof import("../components/VehicleFitmentPicker.vue")['default']
 export const VehicleGarage: typeof import("../components/VehicleGarage.vue")['default']
 export const VehicleScene: typeof import("../components/VehicleScene.client.vue")['default']
 export const NuxtWelcome: typeof import("../node_modules/nuxt/dist/app/components/welcome.vue")['default']
@@ -44,7 +49,12 @@ export const Body: typeof import("../node_modules/nuxt/dist/head/runtime/compone
 export const NuxtIsland: typeof import("../node_modules/nuxt/dist/app/components/nuxt-island")['default']
 export const LazyBrandLogo: LazyComponent<typeof import("../components/BrandLogo.vue")['default']>
 export const LazyCatalogBrowser: LazyComponent<typeof import("../components/CatalogBrowser.vue")['default']>
+export const LazyCategoryPicker: LazyComponent<typeof import("../components/CategoryPicker.vue")['default']>
+export const LazyCategoryTree: LazyComponent<typeof import("../components/CategoryTree.vue")['default']>
+export const LazyProductCard: LazyComponent<typeof import("../components/ProductCard.vue")['default']>
+export const LazySearchSelect: LazyComponent<typeof import("../components/SearchSelect.vue")['default']>
 export const LazyVehicleBrandStrip: LazyComponent<typeof import("../components/VehicleBrandStrip.vue")['default']>
+export const LazyVehicleFitmentPicker: LazyComponent<typeof import("../components/VehicleFitmentPicker.vue")['default']>
 export const LazyVehicleGarage: LazyComponent<typeof import("../components/VehicleGarage.vue")['default']>
 export const LazyVehicleScene: LazyComponent<typeof import("../components/VehicleScene.client.vue")['default']>
 export const LazyNuxtWelcome: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/welcome.vue")['default']>

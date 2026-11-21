@@ -18,7 +18,7 @@ useHead({title:'سبد خرید | پارتلی'})
       <section class="items-panel" aria-labelledby="items-title">
         <div class="panel-heading"><h2 id="items-title">کالاهای سبد</h2><span>{{cart.length.toLocaleString('fa-IR')}} نوع کالا</span></div>
         <article v-for="item in cart" :key="item.id" class="cart-item">
-          <div class="item-info"><NuxtLink :to="`/products/${item.slug}`" class="item-name">{{item.name}}</NuxtLink><p>قیمت واحد <span>{{money(item.price)}}</span></p></div>
+          <div class="item-info"><NuxtLink :to="`/products/${item.slug}`" class="item-name">{{item.name}}</NuxtLink><p>قیمت واحد <span>{{money(item.price)}}</span></p><p class="unit-words">{{priceInWords(item.price)}}</p><p v-if="item.packaging">نوع بسته‌بندی <span>{{packagingLabel(item.packaging)}}</span></p></div>
           <div class="item-controls"><label class="quantity-label">تعداد<input v-model.number="item.quantity" type="number" min="1" :max="item.stock" :aria-label="`تعداد ${item.name}`" class="market-input quantity-input" @change="quantity(item)"></label><button type="button" class="remove-button" :aria-label="`حذف ${item.name}`" @click="remove(item.id)">حذف</button></div>
           <div class="line-total"><span>جمع کالا</span><strong>{{money(Number(item.price)*item.quantity)}}</strong></div>
         </article>
@@ -50,6 +50,7 @@ h2 { font-size: 17px; font-weight: 700; }
 .item-info { min-width: 0; }
 .item-name { font-size: 15px; font-weight: 600; line-height: 2; overflow-wrap: anywhere; }
 .item-info p { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; font-size: 12px; color: #656b65; }
+.item-info .unit-words { margin-top: 2px; color: #8a8f86; font-size: 11px; }
 .item-controls { display: flex; align-items: end; gap: 12px; }
 .quantity-label { display: grid; gap: 6px; font-size: 11px; color: #656b65; }
 .quantity-input { width: 88px; text-align: center; padding-inline: 8px; }

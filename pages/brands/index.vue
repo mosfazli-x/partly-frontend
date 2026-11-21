@@ -29,7 +29,8 @@ useHead({
 const makes = computed(() => makeList.value.filter((make: any) => (make.models || []).length))
 const models = computed((): any[] => makeList.value.find((make: any) => make.id === makeId.value)?.models || [])
 const selectedModel = computed((): any => models.value.find((model: any) => model.id === modelId.value) || null)
-const categories = computed(() => categoryList.value.flatMap((item: any) => [item, ...(item.children || [])]))
+const categoryTree = computed(() => filterCategoryTreeByEquipment(categoryList.value as any, 'CAR'))
+const categories = computed(() => flattenCategoryTree(categoryTree.value))
 
 // Only explicit trim years are trusted; model production dates do not prove trim fitment.
 function yearRange(value: string | null | undefined) {
@@ -71,6 +72,7 @@ async function loadVehicles() {
     if (current !== vehicleRequest) return
     makeList.value = Array.isArray(vehicles) ? vehicles : []
     categoryList.value = Array.isArray(allCategories) ? allCategories : []
+    if (category.value && !findCategoryNode(categoryTree.value, category.value)) category.value = ''
     if (makeId.value && !makes.value.some((item: any) => item.id === makeId.value)) makeId.value = ''
     if (modelId.value && !selectedModel.value) modelId.value = ''
     if (year.value && !knownYears.value.includes(Number(year.value))) year.value = ''
@@ -218,13 +220,10 @@ onMounted(async () => { await loadVehicles(); await load(); mounted = true })
             </select>
             <small id="year-hint">{{ yearHint }}</small>
           </label>
-          <label class="filter-field">
+          <div class="filter-field filter-field-tree">
             <span>دسته‌بندی</span>
-            <select v-model="category" @change="load(true)">
-              <option value="">همه دسته‌ها</option>
-              <option v-for="item in categories" :key="item.id" :value="item.slug">{{ item.name }}</option>
-            </select>
-          </label>
+            <CategoryPicker v-model="category" :categories="categoryTree" placeholder="همه دسته‌ها" aria-label="فیلتر دسته‌بندی" @change="load(true)" />
+          </div>
           <form class="filter-search" role="search" @submit.prevent="load(true)">
             <label class="filter-field">
               <span>جستجو</span>
@@ -272,7 +271,7 @@ onMounted(async () => { await loadVehicles(); await load(); mounted = true })
               <span class="stock-badge" :class="{ 'is-out': !product.stock }">{{ product.stock ? 'موجود' : 'ناموجود' }}</span>
             </NuxtLink>
             <div class="product-body">
-              <p class="product-meta">{{ [product.brand, product.category?.name].filter(Boolean).join(' • ') || 'قطعه عمومی' }}</p>
+              <p class="product-meta">{{ [product.brand, product.category?.name, product.packaging ? `بسته‌بندی: ${packagingLabel(product.packaging)}` : null].filter(Boolean).join(' • ') || 'قطعه عمومی' }}</p>
               <NuxtLink :to="`/products/${product.slug}`" class="product-name">{{ product.name }}</NuxtLink>
               <div class="product-foot">
                 <strong>{{ money(product.price) }}</strong>
